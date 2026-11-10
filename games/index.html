@@ -119,7 +119,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
   <p class="gnum" id="gnum">Game 1</p>
   <div id="neweditor"></div>
   <div class="win" id="winbtns"></div>
-  <p class="hint" id="hint">Pick the game, add the players on each side, then tap who won.</p>
+  <p class="hint" id="hint">Pick the game, add the players on each team, then tap who won.</p>
 </section>
 
 <section id="v-all" hidden>
@@ -210,7 +210,7 @@ function Editor(root, sides){
   function slotHTML(si,s,i){
     const k=si+":"+i;
     if(s.p) return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><span class="pn">${esc(s.p.name)}</span><span class="pt">${esc(teamLabel(s.p.team))}</span><button class="x" data-x="${k}" aria-label="Remove ${esc(s.p.name)}">×</button></div></div>`;
-    return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><input data-in="${k}" value="${esc(s.q)}" placeholder="Type a name" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Side ${L(si)} player ${i+1}"><button class="x" data-x="${k}" aria-label="Remove this spot">×</button></div><ul class="dd" data-dd="${k}">${ddHTML(si,i)}</ul></div>`;
+    return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><input data-in="${k}" value="${esc(s.q)}" placeholder="Type a name" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Team ${L(si)} player ${i+1}"><button class="x" data-x="${k}" aria-label="Remove this spot">×</button></div><ul class="dd" data-dd="${k}">${ddHTML(si,i)}</ul></div>`;
   }
   function ddHTML(si,i){
     const q=S[si][i].q.trim(); if(!q) return "";
@@ -220,13 +220,13 @@ function Editor(root, sides){
     return items + (exact?"":`<li><button data-guest="${si}:${i}"><span>Add “${esc(q)}”</span><span class="t">not on the list</span></button></li>`);
   }
   function sideHTML(arr,si){
-    return `<div class="side" style="${C(si)}"><div class="shead"><span class="nm">Side ${L(si)}${S.length>2?`<button data-rmside="${si}">remove side</button>`:""}</span>
-      <span class="step"><button data-minus="${si}" aria-label="One fewer spot on side ${L(si)}">−</button><b>${arr.length}</b><button data-plus="${si}" aria-label="One more spot on side ${L(si)}">+</button> players</span></div>
+    return `<div class="side" style="${C(si)}"><div class="shead"><span class="nm">Team ${L(si)}${S.length>2?`<button data-rmside="${si}">remove team</button>`:""}</span>
+      <span class="step"><button data-minus="${si}" aria-label="One fewer spot on team ${L(si)}">−</button><b>${arr.length}</b><button data-plus="${si}" aria-label="One more spot on team ${L(si)}">+</button> players</span></div>
       <div class="slots">${arr.map((s,i)=>slotHTML(si,s,i)).join("")}</div>
       <button class="addp" data-plus="${si}">+ Add player</button></div>`;
   }
   function render(focus){
-    root.innerHTML=S.map(sideHTML).join("")+(S.length<MAX_SIDES?`<button class="adds" data-addside>+ Add side ${L(S.length)} (for races with more than ${S.length} lanes)</button>`:"");
+    root.innerHTML=S.map(sideHTML).join("")+(S.length<MAX_SIDES?`<button class="adds" data-addside>+ Add team ${L(S.length)} (for races with more than ${S.length} lanes)</button>`:"");
     if(focus){ const el=root.querySelector(`[data-in="${focus}"]`); if(el) el.focus(); }
     root.dispatchEvent(new Event("sides"));
   }
@@ -330,7 +330,7 @@ let current=draft.game||"";
 const ne=Editor($("neweditor"),draft.sides);
 function saveDraft(){ try{ localStorage.setItem(DRAFT_KEY,JSON.stringify({game:current,sides:ne.slots()})); }catch(e){} }
 function hint(t,err){ $("hint").textContent=t; $("hint").className="hint"+(err?" err":""); }
-const HINT="Pick the game, add the players on each side, then tap who won.";
+const HINT="Pick the game, add the players on each team, then tap who won.";
 
 function renderChips(){
   const names=gameNames(); if(current&&!names.some(n=>low(n)===low(current))) names.push(current);
@@ -349,7 +349,7 @@ $("otherin").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefau
 
 function renderWinButtons(){
   const n=ne.count();
-  $("winbtns").innerHTML=Array.from({length:n},(_,i)=>`<button data-win="${i}" style="${C(i)}">Side ${L(i)} won</button>`).join("")+`<button class="tie" data-tie>Tie</button>`;
+  $("winbtns").innerHTML=Array.from({length:n},(_,i)=>`<button data-win="${i}" style="${C(i)}">Team ${L(i)} won</button>`).join("")+`<button class="tie" data-tie>Tie</button>`;
 }
 $("neweditor").addEventListener("sides",renderWinButtons);
 renderWinButtons();
@@ -359,7 +359,7 @@ $("winbtns").addEventListener("click",e=>{ const t=e.target.closest("button"); i
 function check(v){
   if(!current) return "Pick which game this is at the top.";
   if(v.pending.length) return `Pick “${v.pending[0]}” from the list, or clear that spot.`;
-  if(v.sides.some(s=>!s.length)) return "Add at least one player to each side, or remove the empty side.";
+  if(v.sides.some(s=>!s.length)) return "Add at least one player to each team, or remove the empty team.";
   return null;
 }
 async function record(winners,tie){
@@ -370,7 +370,7 @@ async function record(winners,tie){
   btns.forEach(b=>b.disabled=false);
   if(!ok){ hint("Didn't save. Tap who won again.",true); return; }
   ne.reset(v.sides.map(s=>s.length)); saveDraft(); hint(HINT);
-  toast(`${current} saved: ${tie?"tie":"Side "+winners[0]+" won"}`, async()=>{ if(await write(()=>store.del(id))){ ne.load(g.sides); saveDraft(); } });
+  toast(`${current} saved: ${tie?"tie":"Team "+winners[0]+" won"}`, async()=>{ if(await write(()=>store.del(id))){ ne.load(g.sides); saveDraft(); } });
 }
 $("neweditor").addEventListener("change",()=>{ saveDraft(); hint(HINT); });
 
@@ -378,7 +378,7 @@ $("neweditor").addEventListener("change",()=>{ saveDraft(); hint(HINT); });
 let editing=null; // {id, el, ed, winners}
 let filter="";
 function names(a){ return a.map(p=>esc(p.name)).join(", "); }
-function winSel(){ return Array.from({length:editing.ed.count()},(_,i)=>`<button data-w="${L(i)}" style="${C(i)}" class="${editing.winners.includes(L(i))?"on":""}">Side ${L(i)}</button>`).join(""); }
+function winSel(){ return Array.from({length:editing.ed.count()},(_,i)=>`<button data-w="${L(i)}" style="${C(i)}" class="${editing.winners.includes(L(i))?"on":""}">Team ${L(i)}</button>`).join(""); }
 function renderAll(){
   renderChips();
   const ae=document.activeElement; if(ae&&$("glist").contains(ae)&&ae.tagName==="INPUT") return;
@@ -409,7 +409,7 @@ function setEditStatus(s){ if(!editing) return; editing.status=s; const el=$("gl
 function autosave(){
   if(!editing) return; const ed=editing, v=ed.ed.value();
   ed.winners=ed.winners.filter(w=>w.charCodeAt(0)-65<v.sides.length);
-  if(v.sides.some(s=>!s.length)){ setEditStatus("Not saved: each side needs a player"); return; }
+  if(v.sides.some(s=>!s.length)){ setEditStatus("Not saved: each team needs a player"); return; }
   if(!ed.winners.length){ setEditStatus("Not saved: pick a winner"); return; }
   const g=Object.assign({},games[ed.id],{sides:v.sides.map(s=>s.map(clean)),winners:ed.winners});
   setEditStatus("Saving…");
@@ -437,7 +437,7 @@ $("glist").addEventListener("click",async e=>{
 
 /* ---------- Copy for Google Sheets: one row per player per game ---------- */
 $("copy").onclick=()=>{
-  const rows=[["#","Game","Game no.","Time","Side","Won?","Player","Eco team"]]; const per={};
+  const rows=[["#","Game","Game no.","Time","Team","Won?","Player","Eco team"]]; const per={};
   sorted().forEach(([,g],i)=>{ const n=g.game||"Untitled"; per[n]=(per[n]||0)+1; const w=winnersOf(g);
     sidesOf(g).forEach((s,si)=>s.forEach(p=>rows.push([i+1,n,per[n],new Date(g.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),L(si),w.includes(L(si))?(w.length>1?"Tie":"Won"):"Lost",p.name,p.team||""]))); });
   const text=rows.map(r=>r.map(v=>String(v).replace(/[\t\n]/g," ")).join("\t")).join("\n");
