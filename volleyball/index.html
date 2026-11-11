@@ -2,31 +2,28 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Eco Cup Games</title>
+<title>Eco Cup Volleyball</title>
 <meta charset="utf-8">
-<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
-/* Same app as the volleyball tracker, for any game: pick the game, fill in 2+ sides, tap who won. */
+/* Layout: one-column phone app, two tabs: New game / All games. Each side is a list of player slots with a type-to-search picker. */
 :root{
   --bg:#f3f6f4; --surface:#ffffff; --fg:#14201a; --muted:#5c6b63; --line:#d8e0db;
-  --c0:#1f6fd1; --c1:#d9531e; --c2:#7b4fc9; --c3:#0f8a7e; --c4:#c2357a; --c5:#7a7a12;
-  --accent:#1d7a4a; --danger:#b4232c; --hl:#eef3f0; --tint:14%;
+  --a:#1f6fd1; --a-soft:#e3eefb; --b:#d9531e; --b-soft:#fcebe3;
+  --accent:#1d7a4a; --danger:#b4232c; --hl:#eef3f0;
   --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0f1512; --surface:#18211c; --fg:#e7efe9; --muted:#97a69d; --line:#2a352f;
-  --c0:#5aa2f5; --c1:#f08a5d; --c2:#ad8cf0; --c3:#3fc2b2; --c4:#f07ab3; --c5:#c7c74a;
-  --accent:#4cc185; --danger:#f0727a; --hl:#223029; --tint:18%; color-scheme:dark}}
+  --a:#5aa2f5; --a-soft:#17263a; --b:#f08a5d; --b-soft:#3a2219; --accent:#4cc185; --danger:#f0727a; --hl:#223029; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1512; --surface:#18211c; --fg:#e7efe9; --muted:#97a69d; --line:#2a352f;
-  --c0:#5aa2f5; --c1:#f08a5d; --c2:#ad8cf0; --c3:#3fc2b2; --c4:#f07ab3; --c5:#c7c74a;
-  --accent:#4cc185; --danger:#f0727a; --hl:#223029; --tint:18%; color-scheme:dark}
+  --a:#5aa2f5; --a-soft:#17263a; --b:#f08a5d; --b-soft:#3a2219; --accent:#4cc185; --danger:#f0727a; --hl:#223029; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--fg);font:16px/1.4 var(--body);margin:0;
+body{background:var(--bg);color:var(--fg);font:16px/1.4 var(--body);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 60px}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .wrap{max-width:640px;margin:0 auto}
@@ -41,20 +38,13 @@ nav button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-col
 section{padding-top:14px}
 button{cursor:pointer;font-family:inherit}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.lbl{font:700 15px var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px}
-/* game picker */
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
-.chips button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 13px;font:600 15px var(--body)}
-.chips button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.chips button.other{border-style:dashed;color:var(--muted)}
-.otherrow{display:flex;gap:6px;margin-bottom:6px}
-.otherrow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:10px;font:16px var(--body)}
-.gnum{font:700 22px var(--display);text-transform:uppercase;letter-spacing:.03em;margin:14px 0 10px}
+.gnum{font:700 22px var(--display);text-transform:uppercase;letter-spacing:.03em;margin:0 0 10px}
 /* side editor */
-.side{--c:var(--c0);border-radius:12px;padding:10px;margin-bottom:10px;background:color-mix(in srgb,var(--c) var(--tint),var(--bg))}
+.side{border-radius:12px;padding:10px;margin-bottom:10px}
+.side.a{background:var(--a-soft)} .side.b{background:var(--b-soft)}
 .shead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
-.shead .nm{font:700 19px var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--c);display:flex;align-items:center;gap:6px}
-.shead .nm button{border:0;background:transparent;color:var(--muted);font:600 13px var(--body);text-transform:none;letter-spacing:0;padding:4px 6px;text-decoration:underline}
+.shead .nm{font:700 19px var(--display);text-transform:uppercase;letter-spacing:.05em}
+.side.a .nm{color:var(--a)} .side.b .nm{color:var(--b)}
 .step{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
 .step button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:700 20px/1 var(--body)}
 .step b{min-width:20px;text-align:center;color:var(--fg);font-variant-numeric:tabular-nums}
@@ -71,12 +61,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .dd li button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border:0;background:transparent;color:var(--fg);padding:10px 8px;border-radius:6px;font-size:15px}
 .dd li button:hover,.dd li button:focus-visible{background:var(--hl)}
 .dd li .t{font-size:12px;color:var(--muted);white-space:nowrap}
+.dd li.none{padding:10px 8px;color:var(--muted);font-size:14px}
 .addp{margin-top:8px;width:100%;padding:10px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--fg);font-weight:600}
-.adds{width:100%;padding:12px;border:1px dashed var(--muted);border-radius:12px;background:transparent;color:var(--fg);font-weight:600;margin-bottom:14px}
 .win{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.win button{--c:var(--c0);padding:18px 8px;border-radius:12px;border:0;color:#fff;background:var(--c);font:700 22px/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
-.win button.tie{background:var(--surface);color:var(--fg);border:1px solid var(--line);font-size:18px}
-.win button:disabled{opacity:.5}
+.win button{padding:18px 8px;border-radius:12px;border:0;color:#fff;font:700 22px/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.win .wa{background:var(--a)} .win .wb{background:var(--b)}
 .hint{font-size:14px;color:var(--muted);margin-top:8px;text-align:center}
 .hint.err{color:var(--danger)}
 .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
@@ -88,24 +77,27 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .games>li{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
 .ghead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
 .ghead b{font:700 19px var(--display);text-transform:uppercase}
+.won-a{color:var(--a)} .won-b{color:var(--b)}
 .gl{font-size:14px;overflow-wrap:anywhere;margin:2px 0}
-.gl .k{font:700 14px var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--c)}
-.gl .w{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-left:4px;color:var(--c)}
+.gl .k{font:700 14px var(--display);text-transform:uppercase;letter-spacing:.04em}
+.gl .w{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-left:4px}
 .gfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap}
 .wsel{display:flex;gap:6px;margin:4px 0 0;align-items:center;flex-wrap:wrap}
-.wsel button{--c:var(--c0);border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:8px;padding:8px 12px;font-weight:600}
-.wsel button.on{background:var(--c);border-color:var(--c);color:#fff}
+.wsel button{border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:8px;padding:8px 12px;font-weight:600}
+.wsel button.on-a{background:var(--a);border-color:var(--a);color:#fff}
+.wsel button.on-b{background:var(--b);border-color:var(--b);color:#fff}
 .empty{padding:20px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--fg);color:var(--bg);padding:10px 14px;border-radius:10px;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
 .toast button{background:none;border:0;color:var(--bg);font-weight:700;text-decoration:underline}
 #copytext{width:100%;min-height:120px;margin-top:8px;font:14px var(--body);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px}
+.win button:disabled{opacity:.5}
 </style>
 </head>
 <body>
 
 <div class="wrap">
 <header>
-  <h1>Eco Cup Games</h1>
+  <h1>Eco Cup Volleyball</h1>
   <div class="sub"><span class="dot" id="dot"></span><span id="status">Connecting…</span></div>
   <nav role="tablist">
     <button id="t-new" role="tab" aria-selected="true" data-tab="new">New game</button>
@@ -114,19 +106,15 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 </header>
 
 <section id="v-new">
-  <p class="lbl">Which game?</p>
-  <div class="chips" id="gchips"></div>
-  <div class="otherrow" id="otherrow" hidden><input id="otherin" placeholder="Type the game's name" autocomplete="off" autocapitalize="sentences"><button class="btn primary" id="otherok">Use</button></div>
   <p class="gnum" id="gnum">Game 1</p>
   <div id="neweditor"></div>
-  <div class="win" id="winbtns"></div>
-  <p class="hint" id="hint">Pick the game, add the players on each team, then tap who won.</p>
+  <div class="win"><button class="wa" id="winA">Side A won</button><button class="wb" id="winB">Side B won</button></div>
+  <p class="hint" id="hint">Add the players on each side, then tap who won.</p>
 </section>
 
 <section id="v-all" hidden>
   <div class="bar"><button class="btn" id="copy">Copy all games for a spreadsheet</button><span class="small" id="cmsg"></span></div>
   <textarea id="copytext" readonly hidden></textarea>
-  <div class="chips" id="fchips"></div>
   <ul class="games" id="glist"></ul>
 </section>
 </div>
@@ -183,18 +171,15 @@ const ROSTER_TSV = `1|Vikramaditya Rajput|
 9|Vikram Rao|
 9|Aniketh Tarikonda|__aniketh`;
 const ROSTER = ROSTER_TSV.split("\n").map(l=>{ const [t,name,user]=l.split("|"); return {team:+t,name,user:user||""}; });
-/* Games offered as buttons. Any name typed under "Other" is added for everyone once a game is saved with it. */
-const PRESET_GAMES = ["Piggyback","Spin and run","Hopping","Speed walking","Three leg","Blindfold obstacle","Trivia"];
-const DB_PATH = "/games/results";
-const MAX_SIDES = 6;
+const DEFAULT_SIZE = 6;
 
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const low=s=>s.toLowerCase();
-const L=i=>String.fromCharCode(65+i);
-const C=i=>`--c:var(--c${i%6})`;
 const teamLabel=t=>t?("Eco team "+t):"Not on the list";
+// older saved games may hold plain names
+const asPlayer=p=>typeof p==="string" ? (ROSTER.find(r=>low(r.name)===low(p))||{name:p,team:null}) : p;
 
 function matches(q, taken){
   q=low(q.trim()); if(!q) return [];
@@ -204,39 +189,37 @@ function matches(q, taken){
   return ROSTER.map(r=>[score(r),r]).filter(([s,r])=>s>=0&&!taken.has(low(r.name))).sort((x,y)=>x[0]-y[0]||x[1].name.localeCompare(y[1].name)).slice(0,8).map(x=>x[1]);
 }
 
-/* ---------- side editor: any number of sides; used for a new game and when editing a saved one ---------- */
-function Editor(root, sides){
-  let S=sides.map(arr=>arr.map(p=>({p,q:""})));
-  const taken=()=>new Set(S.flat().filter(s=>s.p).map(s=>low(s.p.name)));
-  function slotHTML(si,s,i){
-    const k=si+":"+i;
-    if(s.p) return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><span class="pn">${esc(s.p.name)}</span><span class="pt">${esc(teamLabel(s.p.team))}</span><button class="x" data-x="${k}" aria-label="Remove ${esc(s.p.name)}">×</button></div></div>`;
-    return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><input data-in="${k}" value="${esc(s.q)}" placeholder="Type a name" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Team ${L(si)} player ${i+1}"><button class="x" data-x="${k}" aria-label="Remove this spot">×</button></div><ul class="dd" data-dd="${k}">${ddHTML(si,i)}</ul></div>`;
+/* ---------- side editor: used for a new game and when editing a saved one ---------- */
+function Editor(root, init){
+  const S={ a:init.a.map(p=>({p,q:""})), b:init.b.map(p=>({p,q:""})) };
+  const taken=()=>new Set([...S.a,...S.b].filter(s=>s.p).map(s=>low(s.p.name)));
+  function slotHTML(side,s,i){
+    if(s.p) return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><span class="pn">${esc(s.p.name)}</span><span class="pt">${esc(teamLabel(s.p.team))}</span><button class="x" data-x="${side}:${i}" aria-label="Remove ${esc(s.p.name)}">×</button></div></div>`;
+    return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><input data-in="${side}:${i}" value="${esc(s.q)}" placeholder="Type a name" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Side ${side.toUpperCase()} player ${i+1}"><button class="x" data-x="${side}:${i}" aria-label="Remove this spot">×</button></div><ul class="dd" data-dd="${side}:${i}">${ddHTML(side,i)}</ul></div>`;
   }
-  function ddHTML(si,i){
-    const q=S[si][i].q.trim(); if(!q) return "";
+  function ddHTML(side,i){
+    const q=S[side][i].q.trim(); if(!q) return "";
     const m=matches(q,taken());
-    const items=m.map(r=>`<li><button data-pick="${si}:${i}" data-name="${esc(r.name)}"><span>${esc(r.name)}</span><span class="t">Eco team ${r.team}</span></button></li>`).join("");
+    const items=m.map(r=>`<li><button data-pick="${side}:${i}" data-name="${esc(r.name)}"><span>${esc(r.name)}</span><span class="t">Eco team ${r.team}</span></button></li>`).join("");
     const exact=ROSTER.some(r=>low(r.name)===low(q))||taken().has(low(q));
-    return items + (exact?"":`<li><button data-guest="${si}:${i}"><span>Add “${esc(q)}”</span><span class="t">not on the list</span></button></li>`);
+    return items + (exact?"":`<li><button data-guest="${side}:${i}"><span>Add “${esc(q)}”</span><span class="t">not on the list</span></button></li>`);
   }
-  function sideHTML(arr,si){
-    return `<div class="side" style="${C(si)}"><div class="shead"><span class="nm">Team ${L(si)}${S.length>2?`<button data-rmside="${si}">remove team</button>`:""}</span>
-      <span class="step"><button data-minus="${si}" aria-label="One fewer spot on team ${L(si)}">−</button><b>${arr.length}</b><button data-plus="${si}" aria-label="One more spot on team ${L(si)}">+</button> players</span></div>
-      <div class="slots">${arr.map((s,i)=>slotHTML(si,s,i)).join("")}</div>
-      <button class="addp" data-plus="${si}">+ Add player</button></div>`;
+  function sideHTML(side){
+    const arr=S[side];
+    return `<div class="side ${side}"><div class="shead"><span class="nm">Side ${side.toUpperCase()}</span>
+      <span class="step"><button data-minus="${side}" aria-label="One fewer spot on side ${side.toUpperCase()}">−</button><b>${arr.length}</b><button data-plus="${side}" aria-label="One more spot on side ${side.toUpperCase()}">+</button> players</span></div>
+      <div class="slots">${arr.map((s,i)=>slotHTML(side,s,i)).join("")}</div>
+      <button class="addp" data-plus="${side}">+ Add player</button></div>`;
   }
   function render(focus){
-    root.innerHTML=S.map(sideHTML).join("")+(S.length<MAX_SIDES?`<button class="adds" data-addside>+ Add team ${L(S.length)} (for races with more than ${S.length} lanes)</button>`:"");
-    if(focus){ const el=root.querySelector(`[data-in="${focus}"]`); if(el) el.focus(); }
-    root.dispatchEvent(new Event("sides"));
+    root.innerHTML=sideHTML("a")+sideHTML("b");
+    if(focus){ const el=root.querySelector(`[data-in="${focus}"]`); if(el){ el.focus(); } }
   }
-  function nextEmpty(si,from){ const arr=S[si]; for(let k=from+1;k<arr.length;k++) if(!arr[k].p) return si+":"+k; for(let k=0;k<arr.length;k++) if(!arr[k].p) return si+":"+k; return null; }
-  const changed=()=>root.dispatchEvent(new Event("change"));
+  function nextEmpty(side,from){ const arr=S[side]; for(let k=from+1;k<arr.length;k++) if(!arr[k].p) return side+":"+k; for(let k=0;k<arr.length;k++) if(!arr[k].p) return side+":"+k; return null; }
   root.addEventListener("input",e=>{
-    const k=e.target.dataset.in; if(!k) return; const [si,i]=k.split(":").map(Number);
-    S[si][i].q=e.target.value;
-    root.querySelector(`[data-dd="${k}"]`).innerHTML=ddHTML(si,i);
+    const k=e.target.dataset.in; if(!k) return; const [side,i]=k.split(":");
+    S[side][+i].q=e.target.value;
+    root.querySelector(`[data-dd="${k}"]`).innerHTML=ddHTML(side,+i);
   });
   root.addEventListener("keydown",e=>{
     const k=e.target.dataset&&e.target.dataset.in; if(!k||e.key!=="Enter") return;
@@ -245,37 +228,33 @@ function Editor(root, sides){
   root.addEventListener("click",e=>{
     const t=e.target.closest("button"); if(!t) return; const d=t.dataset;
     if(d.pick||d.guest){
-      const [si,i]=(d.pick||d.guest).split(":").map(Number); const s=S[si][i];
+      const [side,i]=(d.pick||d.guest).split(":"); const s=S[side][+i];
       s.p = d.pick ? ROSTER.find(r=>r.name===d.name) : {name:s.q.trim().replace(/\s+/g," "),team:null};
-      s.q=""; render(nextEmpty(si,i)); changed();
+      s.q=""; render(nextEmpty(side,+i)); root.dispatchEvent(new Event("change"));
     } else if(d.x){
-      const [si,i]=d.x.split(":").map(Number); S[si].splice(i,1); render(); changed();
-    } else if(d.plus!==undefined){
-      const si=+d.plus; S[si].push({p:null,q:""}); render(si+":"+(S[si].length-1)); changed();
-    } else if(d.minus!==undefined){
-      const arr=S[+d.minus]; if(!arr.length) return;
+      const [side,i]=d.x.split(":"); S[side].splice(+i,1); render(); root.dispatchEvent(new Event("change"));
+    } else if(d.plus){
+      S[d.plus].push({p:null,q:""}); render(d.plus+":"+(S[d.plus].length-1)); root.dispatchEvent(new Event("change"));
+    } else if(d.minus){
+      const arr=S[d.minus]; if(!arr.length) return;
       let k=-1; for(let j=arr.length-1;j>=0;j--) if(!arr[j].p){ k=j; break; }
-      arr.splice(k>=0?k:arr.length-1,1); render(); changed();
-    } else if(d.addside!==undefined){
-      const n=S.length?S[S.length-1].length||1:1; S.push(Array.from({length:n},()=>({p:null,q:""}))); render(); changed();
-    } else if(d.rmside!==undefined){
-      S.splice(+d.rmside,1); render(); changed();
+      arr.splice(k>=0?k:arr.length-1,1); render(); root.dispatchEvent(new Event("change"));
     }
   });
   render();
   return {
-    value(){ return { sides:S.map(arr=>arr.filter(s=>s.p).map(s=>s.p)),
-      pending:S.flat().filter(s=>!s.p&&s.q.trim()).map(s=>s.q.trim()) }; },
-    reset(sizes){ S=sizes.map(n=>Array.from({length:n},()=>({p:null,q:""}))); render(); },
-    load(sides){ S=sides.map(arr=>arr.map(p=>({p,q:""}))); render(); },
-    slots(){ return S.map(arr=>arr.map(s=>s.p)); },
-    count(){ return S.length; }
+    value(){ return { a:S.a.filter(s=>s.p).map(s=>s.p), b:S.b.filter(s=>s.p).map(s=>s.p),
+      pending:[...S.a,...S.b].filter(s=>!s.p&&s.q.trim()).map(s=>s.q.trim()) }; },
+    reset(sizeA,sizeB){ S.a=Array.from({length:sizeA},()=>({p:null,q:""})); S.b=Array.from({length:sizeB},()=>({p:null,q:""})); render(); },
+    load(a,b){ S.a=a.map(p=>({p,q:""})); S.b=b.map(p=>({p,q:""})); render(); },
+    slots(){ return { a:S.a.map(s=>s.p), b:S.b.map(s=>s.p) }; }
   };
 }
 
-/* ---------- storage: Firebase Realtime Database (same one as volleyball) ---------- */
+/* ---------- storage: the Google Sheet behind this page ---------- */
 let games={}, store=null;
 function setStatus(t,live){ $("status").textContent=t; $("dot").className="dot"+(live?" live":""); }
+/* Paste your Firebase Realtime Database URL here (ends in firebasedatabase.app or firebaseio.com) */
 const DB_URL = "https://eco-cup-862f9-default-rtdb.firebaseio.com/";
 function fbStore(){
   const base=DB_URL.replace(/\/+$/,"");
@@ -287,11 +266,11 @@ function fbStore(){
     return r.json();
   }
   async function poll(){
-    try{ data=(await req(DB_PATH,"GET"))||{}; emit(); setStatus("Live: synced across all devices",true); }
+    try{ data=(await req("/volleyball/games","GET"))||{}; emit(); setStatus("Live: synced across all devices",true); }
     catch(e){ setStatus("Can't reach the database. Check your connection.",false); }
   }
   function stream(){
-    let es; try{ es=new EventSource(base+DB_PATH+".json"); }catch(e){ return; }
+    let es; try{ es=new EventSource(base+"/volleyball/games.json"); }catch(e){ return; }
     const apply=(ev,merge)=>{ let m; try{ m=JSON.parse(ev.data); }catch(e){ return; } if(!m) return;
       const parts=m.path.split("/").filter(Boolean);
       if(!parts.length){ if(merge) Object.assign(data,m.data||{}); else data=m.data||{}; }
@@ -306,8 +285,8 @@ function fbStore(){
   }
   return {
     sub(f){ cb=f; poll(); stream(); setInterval(()=>{ if(!document.hidden) poll(); },20000); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) poll(); }); },
-    async set(id,v){ await req(DB_PATH+"/"+id,"PUT",v); data[id]=v; emit(); },
-    async del(id){ await req(DB_PATH+"/"+id,"DELETE"); delete data[id]; emit(); }
+    async set(id,v){ await req("/volleyball/games/"+id,"PUT",v); data[id]=v; emit(); },
+    async del(id){ await req("/volleyball/games/"+id,"DELETE"); delete data[id]; emit(); }
   };
 }
 async function write(fn){
@@ -316,118 +295,75 @@ async function write(fn){
 }
 const sorted=()=>Object.entries(games).sort((x,y)=>(x[1].at||0)-(y[1].at||0));
 const clean=p=>({name:p.name,team:p.team??null});
-// Firebase can hand arrays back as objects; normalise
-const arr=v=>Array.isArray(v)?v:(v&&typeof v==="object"?Object.keys(v).sort((a,b)=>a-b).map(k=>v[k]):[]);
-const sidesOf=g=>arr(g.sides).map(arr);
-const winnersOf=g=>arr(g.winners);
-const gameNames=()=>{ const seen=new Set(PRESET_GAMES.map(low)), out=[...PRESET_GAMES];
-  sorted().forEach(([,g])=>{ if(g.game&&!seen.has(low(g.game))){ seen.add(low(g.game)); out.push(g.game); } }); return out; };
 
 /* ---------- New game ---------- */
-const DRAFT_KEY="eco-cup-games-draft";
-let draft={game:"",sides:[[null,null],[null,null]]};
-try{ const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null"); if(d&&Array.isArray(d.sides)&&d.sides.length>=2) draft=d; }catch(e){}
-let current=draft.game||"";
-const ne=Editor($("neweditor"),draft.sides);
-function saveDraft(){ try{ localStorage.setItem(DRAFT_KEY,JSON.stringify({game:current,sides:ne.slots()})); }catch(e){} }
+const ne=Editor($("neweditor"),{a:Array(DEFAULT_SIZE).fill(null),b:Array(DEFAULT_SIZE).fill(null)});
+ne.reset(DEFAULT_SIZE,DEFAULT_SIZE);
+// autosave the game being entered on this phone, so a refresh or closed tab doesn't lose it
+const DRAFT_KEY="eco-cup-volleyball-draft";
+function saveDraft(){ try{ localStorage.setItem(DRAFT_KEY,JSON.stringify(ne.slots())); }catch(e){} }
+try{ const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null"); if(d&&Array.isArray(d.a)&&Array.isArray(d.b)) ne.load(d.a,d.b); }catch(e){}
 function hint(t,err){ $("hint").textContent=t; $("hint").className="hint"+(err?" err":""); }
-const HINT="Pick the game, add the players on each team, then tap who won.";
-
-function renderChips(){
-  const names=gameNames(); if(current&&!names.some(n=>low(n)===low(current))) names.push(current);
-  $("gchips").innerHTML=names.map(n=>`<button data-g="${esc(n)}" class="${low(n)===low(current)?"on":""}">${esc(n)}</button>`).join("")+`<button class="other" data-other>+ Other</button>`;
-  const list=sorted(); const same=current?list.filter(([,g])=>low(g.game||"")===low(current)).length:0;
-  $("gnum").textContent=current?`${current} · game ${same+1}`:`Game ${list.length+1}`;
-}
-$("gchips").addEventListener("click",e=>{
-  const t=e.target.closest("button"); if(!t) return;
-  if(t.dataset.other!==undefined){ $("otherrow").hidden=false; $("otherin").focus(); return; }
-  current=t.dataset.g; $("otherrow").hidden=true; renderChips(); saveDraft(); hint(HINT);
-});
-function useOther(){ const v=$("otherin").value.trim().replace(/\s+/g," "); if(!v) return; current=v; $("otherin").value=""; $("otherrow").hidden=true; renderChips(); saveDraft(); hint(HINT); }
-$("otherok").onclick=useOther;
-$("otherin").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); useOther(); } });
-
-function renderWinButtons(){
-  const n=ne.count();
-  $("winbtns").innerHTML=Array.from({length:n},(_,i)=>`<button data-win="${i}" style="${C(i)}">Team ${L(i)} won</button>`).join("")+`<button class="tie" data-tie>Tie</button>`;
-}
-$("neweditor").addEventListener("sides",renderWinButtons);
-renderWinButtons();
-$("winbtns").addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return;
-  if(t.dataset.tie!==undefined) record(Array.from({length:ne.count()},(_,i)=>L(i)),true); else record([L(+t.dataset.win)]); });
-
 function check(v){
-  if(!current) return "Pick which game this is at the top.";
   if(v.pending.length) return `Pick “${v.pending[0]}” from the list, or clear that spot.`;
-  if(v.sides.some(s=>!s.length)) return "Add at least one player to each team, or remove the empty team.";
+  if(!v.a.length||!v.b.length) return "Add at least one player to each side.";
   return null;
 }
-async function record(winners,tie){
+async function record(w){
   const v=ne.value(); const err=check(v); if(err){ hint(err,true); return; }
-  const id=uid(), g={game:current,sides:v.sides.map(s=>s.map(clean)),winners,at:Date.now()};
-  const btns=$("winbtns").querySelectorAll("button"); btns.forEach(b=>b.disabled=true); hint("Saving…");
+  const id=uid(), g={a:v.a.map(clean),b:v.b.map(clean),winner:w,at:Date.now()};
+  const n=sorted().length+1;
+  $("winA").disabled=$("winB").disabled=true; hint("Saving…");
   const ok=await write(()=>store.set(id,g));
-  btns.forEach(b=>b.disabled=false);
+  $("winA").disabled=$("winB").disabled=false;
   if(!ok){ hint("Didn't save. Tap who won again.",true); return; }
-  ne.reset(v.sides.map(s=>s.length)); saveDraft(); hint(HINT);
-  toast(`${current} saved: ${tie?"tie":"Team "+winners[0]+" won"}`, async()=>{ if(await write(()=>store.del(id))){ ne.load(g.sides); saveDraft(); } });
+  const sa=v.a.length, sb=v.b.length;
+  ne.reset(sa,sb); saveDraft(); hint("Add the players on each side, then tap who won.");
+  toast(`Game ${n} saved: Side ${w} won`, async()=>{ if(await write(()=>store.del(id))){ ne.load(g.a,g.b); saveDraft(); } });
 }
-$("neweditor").addEventListener("change",()=>{ saveDraft(); hint(HINT); });
+$("winA").onclick=()=>record("A"); $("winB").onclick=()=>record("B");
+$("neweditor").addEventListener("change",()=>{ saveDraft(); hint("Add the players on each side, then tap who won."); });
 
 /* ---------- All games ---------- */
-let editing=null; // {id, el, ed, winners}
-let filter="";
-function names(a){ return a.map(p=>esc(p.name)).join(", "); }
-function winSel(){ return Array.from({length:editing.ed.count()},(_,i)=>`<button data-w="${L(i)}" style="${C(i)}" class="${editing.winners.includes(L(i))?"on":""}">Team ${L(i)}</button>`).join(""); }
+let editing=null; // {id, el, ed, winner}
+function names(arr){ return (arr||[]).map(asPlayer).map(p=>esc(p.name)).join(", "); }
 function renderAll(){
-  renderChips();
   const ae=document.activeElement; if(ae&&$("glist").contains(ae)&&ae.tagName==="INPUT") return;
   const list=sorted();
-  $("count").textContent=list.length?`(${list.length})`:"";
+  $("gnum").textContent="Game "+(list.length+1); $("count").textContent=list.length?`(${list.length})`:"";
   if(editing&&!games[editing.id]) editing=null;
-  const used=[...new Set(list.map(([,g])=>g.game||"Untitled"))];
-  if(filter&&!used.includes(filter)) filter="";
-  $("fchips").innerHTML=used.length>1?`<button data-f="" class="${filter?"":"on"}">All</button>`+used.map(n=>`<button data-f="${esc(n)}" class="${filter===n?"on":""}">${esc(n)}</button>`).join(""):"";
-  const per={}; const numbered=list.map(([id,g])=>{ const n=g.game||"Untitled"; per[n]=(per[n]||0)+1; return [id,g,n,per[n]]; });
-  const shown=numbered.filter(x=>!filter||x[2]===filter);
-  $("glist").innerHTML = shown.length ? shown.map(([id,g,n,k])=>{
-    const title=`${esc(n)} · game ${k}`;
-    if(editing&&editing.id===id) return `<li data-id="${id}"><div class="ghead"><b>${title}</b><span class="small" data-st>${esc(editing.status||"Changes save automatically")}</span></div><div data-slot></div>
-      <div class="wsel" data-wsel><span class="small">Winner (tap more than one for a tie):</span>${winSel()}</div>
+  $("glist").innerHTML = list.length ? list.map(([id,g],i)=>{
+    if(editing&&editing.id===id) return `<li data-id="${id}"><div class="ghead"><b>Game ${i+1}</b><span class="small" data-st>${esc(editing.status||"Changes save automatically")}</span></div><div data-slot></div>
+      <div class="wsel"><span class="small">Winner:</span><button data-w="A" class="${editing.winner==="A"?"on-a":""}">Side A</button><button data-w="B" class="${editing.winner==="B"?"on-b":""}">Side B</button></div>
       <div class="gfoot"><button class="btn primary" data-done>Done</button></div></li>`;
-    const w=winnersOf(g);
-    return `<li data-id="${id}"><div class="ghead"><b>${title}</b><span class="small">${new Date(g.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span></div>
-      ${sidesOf(g).map((s,i)=>`<p class="gl" style="${C(i)}"><span class="k">${L(i)}</span>${w.includes(L(i))?'<span class="w">won</span>':""} · ${names(s)}</p>`).join("")}
+    return `<li data-id="${id}"><div class="ghead"><b>Game ${i+1}</b><span class="small">${new Date(g.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span></div>
+      <p class="gl"><span class="k won-a">A</span>${g.winner==="A"?'<span class="w won-a">won</span>':""} · ${names(g.a)}</p>
+      <p class="gl"><span class="k won-b">B</span>${g.winner==="B"?'<span class="w won-b">won</span>':""} · ${names(g.b)}</p>
       <div class="gfoot"><button class="btn danger" data-del>Delete</button><button class="btn" data-edit>Edit</button></div></li>`;
   }).reverse().join("") : `<li class="empty">No games yet. Record one on the New game page and it shows up here.</li>`;
   if(editing){ const s=$("glist").querySelector(`li[data-id="${editing.id}"] [data-slot]`); if(s) s.replaceWith(editing.el); }
 }
-$("fchips").addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return; filter=t.dataset.f; renderAll(); });
 $("glist").addEventListener("focusout",()=>setTimeout(()=>{ const ae=document.activeElement; if(!(ae&&$("glist").contains(ae)&&ae.tagName==="INPUT")) renderAll(); },0));
+// every change while editing saves straight away, one write at a time
 let saveChain=Promise.resolve();
 function setEditStatus(s){ if(!editing) return; editing.status=s; const el=$("glist").querySelector(`li[data-id="${editing.id}"] [data-st]`); if(el) el.textContent=s; }
 function autosave(){
   if(!editing) return; const ed=editing, v=ed.ed.value();
-  ed.winners=ed.winners.filter(w=>w.charCodeAt(0)-65<v.sides.length);
-  if(v.sides.some(s=>!s.length)){ setEditStatus("Not saved: each team needs a player"); return; }
-  if(!ed.winners.length){ setEditStatus("Not saved: pick a winner"); return; }
-  const g=Object.assign({},games[ed.id],{sides:v.sides.map(s=>s.map(clean)),winners:ed.winners});
+  if(!v.a.length||!v.b.length){ setEditStatus("Not saved: each side needs a player"); return; }
+  const g=Object.assign({},games[ed.id],{a:v.a.map(clean),b:v.b.map(clean),winner:ed.winner});
   setEditStatus("Saving…");
   saveChain=saveChain.then(async()=>{ const ok=await write(()=>store.set(ed.id,g)); if(editing===ed) setEditStatus(ok?"Saved":"Not saved: check your connection"); });
 }
 const armed={};
 $("glist").addEventListener("click",async e=>{
   const li=e.target.closest("li[data-id]"); if(!li) return; const id=li.dataset.id; const t=e.target.closest("button"); if(!t) return;
-  if(editing&&editing.el.contains(t)) return;
+  if(editing&&editing.el.contains(t)) return; // picker clicks are handled by the editor
   if(t.dataset.edit!==undefined){
     const g=games[id]; const el=document.createElement("div");
-    editing={id, el, ed:Editor(el,sidesOf(g)), winners:winnersOf(g).slice()};
-    el.addEventListener("change",autosave);
-    el.addEventListener("sides",()=>{ const w=$("glist").querySelector(`li[data-id="${id}"] [data-wsel]`); if(w&&editing) w.innerHTML=`<span class="small">Winner (tap more than one for a tie):</span>${winSel()}`; });
-    renderAll(); return;
+    editing={id, el, ed:Editor(el,{a:(g.a||[]).map(asPlayer),b:(g.b||[]).map(asPlayer)}), winner:g.winner};
+    el.addEventListener("change",autosave); renderAll(); return;
   }
-  if(t.dataset.w){ const w=t.dataset.w; editing.winners=editing.winners.includes(w)?editing.winners.filter(x=>x!==w):[...editing.winners,w]; t.classList.toggle("on"); autosave(); return; }
+  if(t.dataset.w){ editing.winner=t.dataset.w; renderAll(); autosave(); return; }
   if(t.dataset.done!==undefined){ editing=null; renderAll(); return; }
   if(t.dataset.del!==undefined){
     if(!armed[id]){ armed[id]=true; t.textContent="Tap again to delete"; setTimeout(()=>{ armed[id]=false; if(t.isConnected) t.textContent="Delete"; },3000); return; }
@@ -438,9 +374,8 @@ $("glist").addEventListener("click",async e=>{
 
 /* ---------- Copy for Google Sheets: one row per player per game ---------- */
 $("copy").onclick=()=>{
-  const rows=[["#","Game","Game no.","Time","Team","Won?","Player","Eco team"]]; const per={};
-  sorted().forEach(([,g],i)=>{ const n=g.game||"Untitled"; per[n]=(per[n]||0)+1; const w=winnersOf(g);
-    sidesOf(g).forEach((s,si)=>s.forEach(p=>rows.push([i+1,n,per[n],new Date(g.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),L(si),w.includes(L(si))?(w.length>1?"Tie":"Won"):"Lost",p.name,p.team||""]))); });
+  const rows=[["Game","Time","Side","Won?","Player","Eco team"]];
+  sorted().forEach(([,g],i)=>["a","b"].forEach(side=>(g[side]||[]).map(asPlayer).forEach(p=>rows.push([i+1,new Date(g.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),side.toUpperCase(),g.winner===side.toUpperCase()?"Won":"Lost",p.name,p.team||""]))));
   const text=rows.map(r=>r.map(v=>String(v).replace(/[\t\n]/g," ")).join("\t")).join("\n");
   const fallback=()=>{ $("copytext").hidden=false; $("copytext").value=text; $("copytext").focus(); $("copytext").select(); $("cmsg").textContent="Copy the text below."; };
   try{ navigator.clipboard.writeText(text).then(()=>{ $("copytext").hidden=true; $("cmsg").textContent="Copied. Paste into cell A1 of your sheet."; },fallback); }catch(e){ fallback(); }
@@ -456,7 +391,7 @@ function toast(msg,undo){ $("ttxt").textContent=msg; undoFn=undo||null; $("undo"
 $("undo").onclick=()=>{ const f=undoFn; $("toast").hidden=true; undoFn=null; f&&f(); };
 
 renderAll();
-store=fbStore(); setStatus("Loading games…",false);
+if(!DB_URL){ setStatus("Not connected yet: paste the database URL into DB_URL",false); store={set:async()=>{throw new Error("no database")},del:async()=>{throw new Error("no database")},sub(f){f({});}}; } else { store=fbStore(); setStatus("Loading games…",false); }
 store.sub(o=>{ games=o; renderAll(); });
 })();
 </script>

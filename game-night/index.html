@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eco Cup Game Night</title>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Wednesday game night: same look as the volleyball and games trackers, plus token payouts. */
+:root{
+  --bg:#f3f6f4; --surface:#ffffff; --fg:#14201a; --muted:#5c6b63; --line:#d8e0db;
+  --c0:#1f6fd1; --c1:#d9531e; --c2:#7b4fc9; --c3:#0f8a7e; --c4:#c2357a; --c5:#7a7a12;
+  --accent:#1d7a4a; --danger:#b4232c; --hl:#eef3f0; --tint:14%;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1512; --surface:#18211c; --fg:#e7efe9; --muted:#97a69d; --line:#2a352f;
+  --c0:#5aa2f5; --c1:#f08a5d; --c2:#ad8cf0; --c3:#3fc2b2; --c4:#f07ab3; --c5:#c7c74a;
+  --accent:#4cc185; --danger:#f0727a; --hl:#223029; --tint:18%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1512; --surface:#18211c; --fg:#e7efe9; --muted:#97a69d; --line:#2a352f;
+  --c0:#5aa2f5; --c1:#f08a5d; --c2:#ad8cf0; --c3:#3fc2b2; --c4:#f07ab3; --c5:#c7c74a;
+  --accent:#4cc185; --danger:#f0727a; --hl:#223029; --tint:18%; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:16px/1.4 var(--body);margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 60px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line)}
+h1{font:700 26px/1 var(--display);letter-spacing:.01em;margin:0 0 4px;text-transform:uppercase}
+.sub{color:var(--muted);font-size:13px;display:flex;gap:8px;align-items:center}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.live{background:var(--accent)}
+nav{display:flex;gap:6px;margin-top:10px}
+nav button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;font:600 16px var(--body)}
+nav button[aria-selected="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+section{padding-top:14px}
+button{cursor:pointer;font-family:inherit}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lbl{font:700 15px var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px}
+/* game picker */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.chips button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:8px 13px;font:600 15px var(--body)}
+.chips button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chips button.other{border-style:dashed;color:var(--muted)}
+.otherrow{display:flex;gap:6px;margin-bottom:6px}
+.otherrow input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:10px;font:16px var(--body)}
+.gnum{font:700 22px var(--display);text-transform:uppercase;letter-spacing:.03em;margin:14px 0 10px}
+/* side editor */
+.side{--c:var(--c0);border-radius:12px;padding:10px;margin-bottom:10px;background:color-mix(in srgb,var(--c) var(--tint),var(--bg))}
+.shead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.shead .nm{font:700 19px var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--c);display:flex;align-items:center;gap:6px}
+.shead .nm button{border:0;background:transparent;color:var(--muted);font:600 13px var(--body);text-transform:none;letter-spacing:0;padding:4px 6px;text-decoration:underline}
+.step{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.step button{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:700 20px/1 var(--body)}
+.step b{min-width:20px;text-align:center;color:var(--fg);font-variant-numeric:tabular-nums}
+.slots{display:grid;gap:6px}
+.slot{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.srow{display:flex;align-items:center;gap:6px;padding:4px 4px 4px 10px;min-height:46px}
+.srow .num{font:600 13px var(--body);color:var(--muted);width:16px;flex:none;font-variant-numeric:tabular-nums}
+.srow input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:16px var(--body);padding:8px 2px}
+.srow .pn{flex:1;min-width:0;font-weight:600;overflow-wrap:anywhere}
+.srow .pt{font-size:12px;color:var(--muted);white-space:nowrap}
+.srow .x{width:38px;height:38px;flex:none;border:0;background:transparent;color:var(--muted);font-size:22px;line-height:1;border-radius:8px}
+.dd{list-style:none;margin:0;padding:0 4px 4px;border-top:1px solid var(--line)}
+.dd:empty{display:none}
+.dd li button{display:flex;justify-content:space-between;gap:8px;width:100%;text-align:left;border:0;background:transparent;color:var(--fg);padding:10px 8px;border-radius:6px;font-size:15px}
+.dd li button:hover,.dd li button:focus-visible{background:var(--hl)}
+.dd li .t{font-size:12px;color:var(--muted);white-space:nowrap}
+.addp{margin-top:8px;width:100%;padding:10px;border:1px dashed var(--line);border-radius:8px;background:transparent;color:var(--fg);font-weight:600}
+.adds{width:100%;padding:12px;border:1px dashed var(--muted);border-radius:12px;background:transparent;color:var(--fg);font-weight:600;margin-bottom:14px}
+.win{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.win button{--c:var(--c0);padding:18px 8px;border-radius:12px;border:0;color:#fff;background:var(--c);font:700 22px/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.win button.tie{background:var(--surface);color:var(--fg);border:1px solid var(--line);font-size:18px}
+.win button:disabled{opacity:.5}
+.hint{font-size:14px;color:var(--muted);margin-top:8px;text-align:center}
+.hint.err{color:var(--danger)}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.btn{padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--danger)}
+.small{font-size:13px;color:var(--muted)}
+.games{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+.games>li{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.ghead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.ghead b{font:700 19px var(--display);text-transform:uppercase}
+.gl{font-size:14px;overflow-wrap:anywhere;margin:2px 0}
+.gl .k{font:700 14px var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--c)}
+.gl .w{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-left:4px;color:var(--c)}
+.gfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;flex-wrap:wrap}
+.wsel{display:flex;gap:6px;margin:4px 0 0;align-items:center;flex-wrap:wrap}
+.wsel button{--c:var(--c0);border:1px solid var(--line);background:var(--bg);color:var(--muted);border-radius:8px;padding:8px 12px;font-weight:600}
+.wsel button.on{background:var(--c);border-color:var(--c);color:#fff}
+.empty{padding:20px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:9;background:var(--fg);color:var(--bg);padding:10px 14px;border-radius:10px;display:flex;gap:12px;align-items:center;max-width:calc(100% - 32px)}
+.toast button{background:none;border:0;color:var(--bg);font-weight:700;text-decoration:underline}
+#copytext{width:100%;min-height:120px;margin-top:8px;font:14px var(--body);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:8px}
+
+/* Game night additions */
+.rule{font-size:14px;color:var(--muted);margin:-4px 0 12px}
+.ord{display:grid;gap:6px;margin-bottom:12px}
+.ord button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:600 16px var(--body)}
+.ord button .pl{min-width:46px;font:700 18px/1 var(--display);text-transform:uppercase;color:var(--muted)}
+.ord button .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.ord button .tk{font:600 14px var(--body);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ord button.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) var(--tint),var(--surface))}
+.ord button.on .pl{color:var(--accent)}
+.savebtn{width:100%;padding:18px 8px;border-radius:12px;border:0;color:#fff;background:var(--accent);font:700 22px/1 var(--display);text-transform:uppercase;letter-spacing:.04em}
+.savebtn:disabled{opacity:.5}
+.res{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.res li{display:flex;gap:8px;font-size:14px;align-items:baseline}
+.res .pl{width:34px;flex:none;font:700 14px var(--display);text-transform:uppercase;color:var(--muted)}
+.res .nm{flex:1;min-width:0;overflow-wrap:anywhere}
+.res .nm small{color:var(--muted)}
+.res .tk{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.up{color:var(--accent)} .down{color:var(--danger)}
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-variant-numeric:tabular-nums}
+th,td{padding:10px 6px;text-align:right;border-bottom:1px solid var(--line);font-size:15px}
+th{font:700 14px var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+th:first-child,td:first-child{text-align:left;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+td.big{font:700 20px var(--display)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+summary{font-weight:600;cursor:pointer}
+details .res{margin-top:8px}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <h1>Eco Cup Game Night</h1>
+  <div class="sub"><span class="dot" id="dot"></span><span id="status">Connecting…</span></div>
+  <nav role="tablist">
+    <button role="tab" aria-selected="true" data-tab="new">New game</button>
+    <button role="tab" aria-selected="false" data-tab="all">All games <span id="count"></span></button>
+    <button role="tab" aria-selected="false" data-tab="tok">Tokens</button>
+  </nav>
+</header>
+
+<section id="v-new">
+  <div id="neweditor"></div>
+  <button class="savebtn" id="save">Save game</button>
+  <p class="hint" id="hint"></p>
+</section>
+
+<section id="v-all" hidden>
+  <div class="bar"><button class="btn" id="copy">Copy all games for a spreadsheet</button><span class="small" id="cmsg"></span></div>
+  <textarea id="copytext" readonly hidden></textarea>
+  <div class="chips" id="fchips"></div>
+  <ul class="games" id="glist"></ul>
+</section>
+
+<section id="v-tok" hidden>
+  <p class="small" style="margin:0 0 10px">Every team starts with 50 tokens. Totals update as games are saved. The podium goes to the most tokens at 10 pm.</p>
+  <div id="toktable"></div>
+  <div id="tokdetail"></div>
+</section>
+</div>
+<div class="toast" id="toast" hidden><span id="ttxt"></span><button id="undo">Undo</button></div>
+
+<script>
+(function(){
+/* Eco Cup roster: team, name, username (searchable too) */
+const ROSTER_TSV = `1|Vikramaditya Rajput|
+1|Siddhant Vivek|
+1|Ayaan Sachdeva|
+1|Kyle Kao|angukk
+1|Richard Ding|
+1|William In|
+2|Debarghya Roy|nothingleft14
+2|Jeirmyri Gier Liddell|sydronic
+2|Nathan Chung|magicalcarrot777
+2|Ashutosh Subudhi|breaddudee
+2|Andy Luo|andyluo0628
+3|Edward Lin|
+3|Daniel Stach|
+3|Claire Chang|
+3|Iman Scire|
+3|Henry Winter|
+4|Quinn Zhang|yayo4103
+4|Amina Mandzukic|
+4|Satvik Karumuri|
+4|Josh Evans|
+4|Enzo Huang|1095799
+5|Grace Hu|
+5|Kaiwen Yao|__lockheedmartin
+5|Joanne Li|
+5|Rosali Schneider|rrosalii
+5|Logan Maurer|
+6|Aadya Sharma|
+6|Clara|claralclaralc
+6|Garrett Nielsen|
+6|Nicholas Siu|
+6|Ivan Cheung|skalepro101
+7|Derek Wang|
+7|Jay Patel|theranger991
+7|Mason Slaski|
+7|Minwoo Yu|real_demjin
+7|Brayden Cao|
+8|Laksh Sharma|savageboi2785
+8|Johannes Soltau|
+8|Everardo Guzman|
+8|Amit Kakkar|BigBraveGoldfish
+8|Gregory Matthew|
+9|Diego|
+9|Maera Singh|
+9|Cynthia Summy|
+9|Andrew Lin|
+9|Vikram Rao|
+9|Aniketh Tarikonda|__aniketh`;
+const ROSTER = ROSTER_TSV.split("\n").map(l=>{ const [t,name,user]=l.split("|"); return {team:+t,name,user:user||""}; });
+
+/* Wednesday's games. "winner" games: everyone pays the entry, everyone but the winner gets 1 back, the winner takes the rest.
+   "place" games: fixed payout by finishing place. eco = Eco points for the winner. */
+const GAMES = [
+  {id:"uno",    name:"Uno",            min:3, max:6, entry:3, mode:"winner", rule:"3 to 6 players, 3 tokens each. Everyone else gets 1 back; the first player out takes the rest."},
+  {id:"card",   name:"Card game",      min:3, max:6, entry:3, mode:"winner", rule:"Bullshit, 3-minute limit. 3 to 6 players, 3 tokens each. Everyone else gets 1 back; the winner takes the rest."},
+  {id:"mk",     name:"Mario Kart",     min:4, max:4, entry:3, mode:"place", pay:[8,3,1,0], eco:2, rule:"One 4-race cup, CPUs off. 4 players, 3 tokens each, paid 8 / 3 / 1 / 0. The winner also earns 2 Eco points."},
+  {id:"smash4", name:"Smash 4-player", min:4, max:4, entry:3, mode:"place", pay:[8,3,1,0], eco:2, rule:"4 players, 3 tokens each, paid 8 / 3 / 1 / 0. The winner also earns 2 Eco points."},
+  {id:"smash1", name:"Smash 1v1",      min:2, max:2, entry:5, mode:"place", pay:[10,0], rule:"2 players, 5 tokens each. The winner takes all 10."}
+];
+const START_TOKENS = 50, TEAMS = 9;
+const DB_PATH = "/gamenight/results";
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const low=s=>s.toLowerCase();
+const G=id=>GAMES.find(g=>g.id===id);
+const teamLabel=t=>t?("Eco team "+t):"Not on the list";
+const ORD=["1st","2nd","3rd","4th","5th","6th"];
+const sgn=n=>n>0?"+"+n:n<0?"−"+(-n):"0";
+const cls=n=>n>0?"up":n<0?"down":"";
+
+function matches(q, taken){
+  q=low(q.trim()); if(!q) return [];
+  const score=r=>{ const n=low(r.name), u=low(r.user);
+    if(n.startsWith(q)) return 0; if(n.split(" ").some(w=>w.startsWith(q))) return 1;
+    if(n.includes(q)) return 2; if(u&&u.includes(q)) return 3; return -1; };
+  return ROSTER.map(r=>[score(r),r]).filter(([s,r])=>s>=0&&!taken.has(low(r.name))).sort((x,y)=>x[0]-y[0]||x[1].name.localeCompare(y[1].name)).slice(0,8).map(x=>x[1]);
+}
+
+/* Tokens each player gets back and nets for one game. order = lowercase names, 1st first (winner games: just the winner). */
+function results(gid, players, order){
+  const d=G(gid), n=players.length;
+  return players.map(p=>{
+    const i=order.indexOf(low(p.name));
+    const back = !d ? 0 : d.mode==="winner" ? (i===0 ? d.entry*n-(n-1) : 1) : (i>=0 ? (d.pay[i]||0) : 0);
+    return {p, place:i>=0?i+1:null, back, net:d?back-d.entry:0, eco:(d&&d.eco&&i===0)?d.eco:0};
+  });
+}
+const complete=(gid,players,order)=>{ const d=G(gid); if(!d) return false; return d.mode==="winner"?order.length===1:order.length===players.length; };
+
+/* ---------- game editor: pick game, players, result. Used for a new game and when editing a saved one ---------- */
+function Entry(root, init, title){
+  let game=init.game||"", S=(init.players||[]).map(p=>({p,q:""})), order=(init.order||[]).slice();
+  const def=()=>G(game);
+  const taken=()=>new Set(S.filter(s=>s.p).map(s=>low(s.p.name)));
+  const filled=()=>S.filter(s=>s.p).map(s=>s.p);
+  function fixOrder(){
+    const t=taken(), d=def(); order=order.filter(n=>t.has(n));
+    if(!d){ order=[]; return; }
+    if(d.mode==="winner") order=order.slice(0,1);
+  }
+  function size(){
+    const d=def(); if(!d) return;
+    const n=Math.min(Math.max(S.length,d.min),d.max);
+    while(S.length>n){ let k=-1; for(let j=S.length-1;j>=0;j--) if(!S[j].p){ k=j; break; } if(k<0) break; S.splice(k,1); }
+    while(S.length<n) S.push({p:null,q:""});
+  }
+  function slotHTML(s,i){
+    if(s.p) return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><span class="pn">${esc(s.p.name)}</span><span class="pt">${esc(teamLabel(s.p.team))}</span><button class="x" data-x="${i}" aria-label="Remove ${esc(s.p.name)}">×</button></div></div>`;
+    return `<div class="slot"><div class="srow"><span class="num">${i+1}</span><input data-in="${i}" value="${esc(s.q)}" placeholder="Type a name" autocomplete="off" autocapitalize="words" spellcheck="false" aria-label="Player ${i+1}"><button class="x" data-x="${i}" aria-label="Remove this spot">×</button></div><ul class="dd" data-dd="${i}">${ddHTML(i)}</ul></div>`;
+  }
+  function ddHTML(i){
+    const q=S[i].q.trim(); if(!q) return "";
+    const m=matches(q,taken());
+    const items=m.map(r=>`<li><button data-pick="${i}" data-name="${esc(r.name)}"><span>${esc(r.name)}</span><span class="t">Eco team ${r.team}</span></button></li>`).join("");
+    const exact=ROSTER.some(r=>low(r.name)===low(q))||taken().has(low(q));
+    return items + (exact?"":`<li><button data-guest="${i}"><span>Add “${esc(q)}”</span><span class="t">not on the list</span></button></li>`);
+  }
+  function orderHTML(){
+    const d=def(), ps=filled();
+    if(ps.length<2) return `<p class="small">Add the players to record the result.</p>`;
+    const res=results(game,ps,order), done=complete(game,ps,order);
+    return res.map(r=>{
+      const k=low(r.p.name), on=r.place!==null;
+      const pl=on?(d.mode==="winner"?"Won":ORD[r.place-1]):"";
+      const tk=done||on?`${sgn(r.net)} tokens${r.eco?` · +${r.eco} Eco pts`:""}`:"tap";
+      return `<button data-ord="${esc(k)}" class="${on?"on":""}"><span class="pl">${pl}</span><span class="nm">${esc(r.p.name)}</span><span class="tk">${tk}</span></button>`;
+    }).join("");
+  }
+  function render(focus){
+    const d=def();
+    let h=`<p class="lbl">Which game?</p><div class="chips">${GAMES.map(g=>`<button data-g="${g.id}" class="${g.id===game?"on":""}">${esc(g.name)}</button>`).join("")}</div>`;
+    if(d){
+      const fixed=d.min===d.max;
+      h+=`<p class="gnum">${esc(title?title(game):d.name)}</p><p class="rule">${esc(d.rule)}</p>
+      <div class="side" style="--c:var(--accent)"><div class="shead"><span class="nm">Players</span>
+        ${fixed?`<span class="step">${d.min} players</span>`:`<span class="step"><button data-minus aria-label="One fewer player">−</button><b>${S.length}</b><button data-plus aria-label="One more player">+</button> players</span>`}</div>
+        <div class="slots">${S.map(slotHTML).join("")}</div>
+        ${S.length<d.max?`<button class="addp" data-plus>+ Add player</button>`:""}</div>
+      <p class="lbl">${d.mode==="winner"?"Who won? Tap the first player out":"Finishing order: tap 1st, then 2nd, …"}</p>
+      <div class="ord">${orderHTML()}</div>`;
+    }
+    root.innerHTML=h;
+    if(focus!==undefined&&focus!==null){ const el=root.querySelector(`[data-in="${focus}"]`); if(el) el.focus(); }
+  }
+  function nextEmpty(from){ for(let k=from+1;k<S.length;k++) if(!S[k].p) return k; for(let k=0;k<S.length;k++) if(!S[k].p) return k; return null; }
+  const changed=()=>root.dispatchEvent(new Event("change"));
+  root.addEventListener("input",e=>{
+    const k=e.target.dataset.in; if(k===undefined) return; const i=+k;
+    S[i].q=e.target.value; root.querySelector(`[data-dd="${i}"]`).innerHTML=ddHTML(i);
+  });
+  root.addEventListener("keydown",e=>{
+    const k=e.target.dataset&&e.target.dataset.in; if(k===undefined||e.key!=="Enter") return;
+    e.preventDefault(); const b=root.querySelector(`[data-dd="${k}"] button`); if(b) b.click();
+  });
+  root.addEventListener("click",e=>{
+    const t=e.target.closest("button"); if(!t||!root.contains(t)) return; const d=t.dataset;
+    if(d.g){ game=d.g; size(); fixOrder(); render(); changed(); }
+    else if(d.pick!==undefined||d.guest!==undefined){
+      const i=+(d.pick!==undefined?d.pick:d.guest); const s=S[i];
+      s.p = d.pick!==undefined ? ROSTER.find(r=>r.name===d.name) : {name:s.q.trim().replace(/\s+/g," "),team:null};
+      s.q=""; render(nextEmpty(i)); changed();
+    } else if(d.x!==undefined){
+      S.splice(+d.x,1); if(def()&&S.length<def().min) S.push({p:null,q:""}); fixOrder(); render(); changed();
+    } else if(d.plus!==undefined){
+      if(def()&&S.length>=def().max) return; S.push({p:null,q:""}); render(S.length-1); changed();
+    } else if(d.minus!==undefined){
+      if(!def()||S.length<=def().min) return;
+      let k=-1; for(let j=S.length-1;j>=0;j--) if(!S[j].p){ k=j; break; }
+      S.splice(k>=0?k:S.length-1,1); fixOrder(); render(); changed();
+    } else if(d.ord!==undefined){
+      const k=d.ord, dd=def();
+      if(order.includes(k)) order=order.filter(x=>x!==k);
+      else if(dd.mode==="winner") order=[k];
+      else { order.push(k); const ps=filled(); if(ps.length===S.length&&order.length===ps.length-1){ const last=ps.find(p=>!order.includes(low(p.name))); if(last) order.push(low(last.name)); } }
+      render(); changed();
+    }
+  });
+  size(); fixOrder(); render();
+  return {
+    value(){ return {game, players:filled().map(p=>({name:p.name,team:p.team??null})), order:order.slice(),
+      pending:S.filter(s=>!s.p&&s.q.trim()).map(s=>s.q.trim())}; },
+    reset(){ S=S.map(()=>({p:null,q:""})); order=[]; size(); render(); },
+    load(g){ game=g.game; S=g.players.map(p=>({p,q:""})); order=g.order.slice(); size(); fixOrder(); render(); },
+    refresh(){ const ae=document.activeElement; if(ae&&root.contains(ae)&&ae.tagName==="INPUT") return; render(); },
+    draft(){ return {game, slots:S.map(s=>s.p), order}; }
+  };
+}
+function check(v){
+  const d=G(v.game);
+  if(!d) return "Pick which game this is at the top.";
+  if(v.pending.length) return `Pick “${v.pending[0]}” from the list, or clear that spot.`;
+  if(v.players.length<d.min) return `${d.name} needs ${d.min===d.max?"":"at least "}${d.min} players.`;
+  if(v.players.length>d.max) return `${d.name} is ${d.min===d.max?"":"at most "}${d.max} players. Remove one.`;
+  if(!complete(v.game,v.players,v.order)) return d.mode==="winner"?"Tap who won.":"Tap everyone's finishing place.";
+  return null;
+}
+
+/* ---------- storage: Firebase Realtime Database (same one as volleyball and games) ---------- */
+let games={}, store=null;
+function setStatus(t,live){ $("status").textContent=t; $("dot").className="dot"+(live?" live":""); }
+const DB_URL = "https://eco-cup-862f9-default-rtdb.firebaseio.com/";
+function fbStore(){
+  const base=DB_URL.replace(/\/+$/,"");
+  let cb=()=>{}, data={};
+  const emit=()=>cb(Object.assign({},data));
+  async function req(path,method,body){
+    const r=await fetch(base+path+".json",{method,body:body===undefined?undefined:JSON.stringify(body)});
+    if(!r.ok) throw new Error("the database said "+r.status);
+    return r.json();
+  }
+  async function poll(){
+    try{ data=(await req(DB_PATH,"GET"))||{}; emit(); setStatus("Live: synced across all devices",true); }
+    catch(e){ setStatus("Can't reach the database. Check your connection.",false); }
+  }
+  function stream(){
+    let es; try{ es=new EventSource(base+DB_PATH+".json"); }catch(e){ return; }
+    const apply=(ev,merge)=>{ let m; try{ m=JSON.parse(ev.data); }catch(e){ return; } if(!m) return;
+      const parts=m.path.split("/").filter(Boolean);
+      if(!parts.length){ if(merge) Object.assign(data,m.data||{}); else data=m.data||{}; }
+      else if(parts.length===1){ if(m.data===null) delete data[parts[0]]; else if(merge) data[parts[0]]=Object.assign({},data[parts[0]],m.data); else data[parts[0]]=m.data; }
+      else { poll(); return; }
+      Object.keys(data).forEach(k=>{ if(data[k]===null) delete data[k]; });
+      emit(); setStatus("Live: synced across all devices",true); };
+    es.addEventListener("put",ev=>apply(ev,false));
+    es.addEventListener("patch",ev=>apply(ev,true));
+    es.addEventListener("cancel",()=>setStatus("The database refused access. Check its rules.",false));
+    es.onerror=()=>setStatus("Reconnecting…",false);
+  }
+  return {
+    sub(f){ cb=f; poll(); stream(); setInterval(()=>{ if(!document.hidden) poll(); },20000); document.addEventListener("visibilitychange",()=>{ if(!document.hidden) poll(); }); },
+    async set(id,v){ await req(DB_PATH+"/"+id,"PUT",v); data[id]=v; emit(); },
+    async del(id){ await req(DB_PATH+"/"+id,"DELETE"); delete data[id]; emit(); }
+  };
+}
+async function write(fn){
+  try{ await fn(); return true; }
+  catch(e){ toast("Didn't save: "+((e&&e.message)||"check your connection")); return false; }
+}
+// Firebase can hand arrays back as objects; normalise
+const arr=v=>Array.isArray(v)?v:(v&&typeof v==="object"?Object.keys(v).sort((a,b)=>a-b).map(k=>v[k]):[]);
+const norm=g=>({game:g.game, players:arr(g.players).map(p=>({name:p.name,team:p.team??null})), order:arr(g.order), at:g.at||0});
+const sorted=()=>Object.entries(games).map(([id,g])=>[id,norm(g)]).sort((x,y)=>x[1].at-y[1].at);
+function numbered(){ const per={}; return sorted().map(([id,g])=>{ per[g.game]=(per[g.game]||0)+1; return [id,g,per[g.game]]; }); }
+const gname=id=>(G(id)||{name:id||"Untitled"}).name;
+
+/* ---------- New game ---------- */
+const DRAFT_KEY="eco-cup-gamenight-draft";
+let draft={game:"",slots:[],order:[]};
+try{ const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null"); if(d&&Array.isArray(d.slots)) draft=d; }catch(e){}
+const newTitle=gid=>`${gname(gid)} · game ${sorted().filter(([,g])=>g.game===gid).length+1}`;
+const ne=Entry($("neweditor"),{game:draft.game,players:[],order:[]},newTitle);
+if(draft.game&&draft.slots.length){ ne.load({game:draft.game,players:draft.slots.filter(Boolean),order:arr(draft.order)}); }
+function saveDraft(){ try{ const d=ne.draft(); localStorage.setItem(DRAFT_KEY,JSON.stringify(d)); }catch(e){} }
+function hint(t,err){ $("hint").textContent=t; $("hint").className="hint"+(err?" err":""); }
+const HINT="Pick the game, add the players, tap the result, then save.";
+hint(HINT);
+$("neweditor").addEventListener("change",()=>{ saveDraft(); const v=ne.value(); hint(check(v)?HINT:"Check the tokens above, then save."); });
+$("save").onclick=async()=>{
+  const v=ne.value(); const err=check(v); if(err){ hint(err,true); return; }
+  const id=uid(), g={game:v.game,players:v.players,order:v.order,at:Date.now()};
+  $("save").disabled=true; hint("Saving…");
+  const ok=await write(()=>store.set(id,g));
+  $("save").disabled=false;
+  if(!ok){ hint("Didn't save. Tap Save game again.",true); return; }
+  ne.reset(); saveDraft(); hint(HINT);
+  const w=g.players.find(p=>low(p.name)===g.order[0]);
+  toast(`${gname(g.game)} saved: ${w?w.name:"?"} won`, async()=>{ if(await write(()=>store.del(id))){ ne.load(g); saveDraft(); } });
+};
+
+/* ---------- All games ---------- */
+let editing=null; // {id, el, ed, status}
+let filter="";
+function resultHTML(g){
+  const d=G(g.game);
+  const rs=results(g.game,g.players,g.order).sort((a,b)=>(a.place||99)-(b.place||99));
+  return `<ul class="res">${rs.map(r=>`<li><span class="pl">${r.place?(d&&d.mode==="winner"?"Won":ORD[r.place-1]):""}</span><span class="nm">${esc(r.p.name)} <small>${r.p.team?"T"+r.p.team:"guest"}</small></span><span class="tk ${cls(r.net)}">${sgn(r.net)}${r.eco?` · +${r.eco} Eco`:""}</span></li>`).join("")}</ul>`;
+}
+function renderAll(){
+  ne.refresh();
+  const ae=document.activeElement; if(ae&&$("glist").contains(ae)&&ae.tagName==="INPUT") return;
+  const list=numbered();
+  $("count").textContent=list.length?`(${list.length})`:"";
+  if(editing&&!games[editing.id]) editing=null;
+  const used=GAMES.map(g=>g.id).filter(id=>list.some(([,g])=>g.game===id));
+  if(filter&&!used.includes(filter)) filter="";
+  $("fchips").innerHTML=used.length>1?`<button data-f="" class="${filter?"":"on"}">All</button>`+used.map(n=>`<button data-f="${n}" class="${filter===n?"on":""}">${esc(gname(n))}</button>`).join(""):"";
+  const shown=list.filter(x=>!filter||x[1].game===filter);
+  $("glist").innerHTML = shown.length ? shown.map(([id,g,k])=>{
+    const title=`${esc(gname(g.game))} · game ${k}`;
+    if(editing&&editing.id===id) return `<li data-id="${id}"><div class="ghead"><b>${title}</b><span class="small" data-st>${esc(editing.status||"Changes save automatically")}</span></div><div data-slot></div>
+      <div class="gfoot"><button class="btn primary" data-done>Done</button></div></li>`;
+    return `<li data-id="${id}"><div class="ghead"><b>${title}</b><span class="small">${new Date(g.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}</span></div>
+      ${resultHTML(g)}
+      <div class="gfoot"><button class="btn danger" data-del>Delete</button><button class="btn" data-edit>Edit</button></div></li>`;
+  }).reverse().join("") : `<li class="empty">No games yet. Record one on the New game page and it shows up here.</li>`;
+  if(editing){ const s=$("glist").querySelector(`li[data-id="${editing.id}"] [data-slot]`); if(s) s.replaceWith(editing.el); }
+  renderTokens();
+}
+$("fchips").addEventListener("click",e=>{ const t=e.target.closest("button"); if(!t) return; filter=t.dataset.f; renderAll(); });
+$("glist").addEventListener("focusout",()=>setTimeout(()=>{ const ae=document.activeElement; if(!(ae&&$("glist").contains(ae)&&ae.tagName==="INPUT")) renderAll(); },0));
+let saveChain=Promise.resolve();
+function setEditStatus(s){ if(!editing) return; editing.status=s; const el=$("glist").querySelector(`li[data-id="${editing.id}"] [data-st]`); if(el) el.textContent=s; }
+function autosave(){
+  if(!editing) return; const ed=editing, v=ed.ed.value(); const err=check(v);
+  if(err){ setEditStatus("Not saved: "+err.replace(/\.$/,"").toLowerCase()); return; }
+  const g=Object.assign({},games[ed.id],{game:v.game,players:v.players,order:v.order});
+  setEditStatus("Saving…");
+  saveChain=saveChain.then(async()=>{ const ok=await write(()=>store.set(ed.id,g)); if(editing===ed) setEditStatus(ok?"Saved":"Not saved: check your connection"); });
+}
+const armed={};
+$("glist").addEventListener("click",async e=>{
+  const li=e.target.closest("li[data-id]"); if(!li) return; const id=li.dataset.id; const t=e.target.closest("button"); if(!t) return;
+  if(editing&&editing.el.contains(t)) return;
+  if(t.dataset.edit!==undefined){
+    const g=norm(games[id]); const el=document.createElement("div");
+    editing={id, el, ed:Entry(el,g,null)};
+    el.addEventListener("change",autosave);
+    renderAll(); return;
+  }
+  if(t.dataset.done!==undefined){ editing=null; renderAll(); return; }
+  if(t.dataset.del!==undefined){
+    if(!armed[id]){ armed[id]=true; t.textContent="Tap again to delete"; setTimeout(()=>{ armed[id]=false; if(t.isConnected) t.textContent="Delete"; },3000); return; }
+    const g=games[id];
+    if(await write(()=>store.del(id))) toast("Game deleted",()=>write(()=>store.set(id,g)));
+  }
+});
+
+/* ---------- Tokens: team totals (50 + net from every game) and Eco points ---------- */
+function tally(){
+  const teams={}; for(let t=1;t<=TEAMS;t++) teams[t]={t,net:0,eco:0,games:0,players:{}};
+  const guests={net:0,eco:0,players:{}};
+  sorted().forEach(([,g])=>{ if(!G(g.game)||!complete(g.game,g.players,g.order)) return;
+    results(g.game,g.players,g.order).forEach(r=>{
+      const T=r.p.team&&teams[r.p.team]?teams[r.p.team]:guests;
+      T.net+=r.net; T.eco+=r.eco; if(T.games!==undefined) T.games++;
+      const P=T.players[r.p.name]||(T.players[r.p.name]={name:r.p.name,net:0,eco:0,games:0,wins:0});
+      P.net+=r.net; P.eco+=r.eco; P.games++; if(r.place===1) P.wins++;
+    }); });
+  return {teams:Object.values(teams), guests};
+}
+function renderTokens(){
+  const {teams,guests}=tally();
+  const rows=teams.slice().sort((a,b)=>b.net-a.net||a.t-b.t);
+  // dense ranking: tied teams share a place
+  let place=0, prev=null; rows.forEach(r=>{ if(r.net!==prev){ place++; prev=r.net; } r.place=place; });
+  $("toktable").innerHTML=`<table><thead><tr><th>Eco team</th><th>Tokens</th><th>Change</th><th>Eco pts</th><th>Plays</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${r.place<=3?`<b>${ORD[r.place-1]}</b> `:""}Team ${r.t}</td><td class="big">${START_TOKENS+r.net}</td><td class="${cls(r.net)}">${sgn(r.net)}</td><td>${r.eco||""}</td><td>${r.games||""}</td></tr>`).join("")}
+    </tbody></table>`;
+  const det=t=>{ const ps=Object.values(t.players).sort((a,b)=>b.net-a.net||a.name.localeCompare(b.name));
+    return `<ul class="res">${ps.map(p=>`<li><span class="nm">${esc(p.name)} <small>${p.games} game${p.games===1?"":"s"}${p.wins?`, ${p.wins} won`:""}</small></span><span class="tk ${cls(p.net)}">${sgn(p.net)}${p.eco?` · +${p.eco} Eco`:""}</span></li>`).join("")}</ul>`; };
+  $("tokdetail").innerHTML=`<p class="lbl" style="margin-top:16px">Players</p>`+
+    teams.filter(t=>t.games).map(t=>`<details><summary>Eco team ${t.t}: ${START_TOKENS+t.net} tokens</summary>${det(t)}</details>`).join("")+
+    (Object.keys(guests.players).length?`<details><summary>Not on the list (not counted for any team)</summary>${det(guests)}</details>`:"")+
+    (teams.some(t=>t.games)?"":`<p class="small">No games yet.</p>`);
+}
+
+/* ---------- Copy for Google Sheets: one row per player per game ---------- */
+$("copy").onclick=()=>{
+  const rows=[["#","Game","Game no.","Time","Place","Player","Eco team","Tokens","Eco points"]];
+  numbered().forEach(([,g,k],i)=>{ const d=G(g.game);
+    results(g.game,g.players,g.order).sort((a,b)=>(a.place||99)-(b.place||99)).forEach(r=>rows.push([i+1,gname(g.game),k,new Date(g.at).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),r.place?(d&&d.mode==="winner"?"Won":ORD[r.place-1]):"",r.p.name,r.p.team||"",r.net,r.eco||0])); });
+  const text=rows.map(r=>r.map(v=>String(v).replace(/[\t\n]/g," ")).join("\t")).join("\n");
+  const fallback=()=>{ $("copytext").hidden=false; $("copytext").value=text; $("copytext").focus(); $("copytext").select(); $("cmsg").textContent="Copy the text below."; };
+  try{ navigator.clipboard.writeText(text).then(()=>{ $("copytext").hidden=true; $("cmsg").textContent="Copied. Paste into cell A1 of your sheet."; },fallback); }catch(e){ fallback(); }
+};
+
+/* ---------- tabs, toast ---------- */
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll("nav button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["new","all","tok"].forEach(t=>$("v-"+t).hidden=b.dataset.tab!==t); window.scrollTo(0,0);
+});
+let undoFn=null, tt=null;
+function toast(msg,undo){ $("ttxt").textContent=msg; undoFn=undo||null; $("undo").hidden=!undo; $("toast").hidden=false; clearTimeout(tt); tt=setTimeout(()=>{ $("toast").hidden=true; undoFn=null; },6000); }
+$("undo").onclick=()=>{ const f=undoFn; $("toast").hidden=true; undoFn=null; f&&f(); };
+
+renderAll();
+store=fbStore(); setStatus("Loading games…",false);
+store.sub(o=>{ games=o; renderAll(); });
+})();
+</script>
+
+</body>
+</html>
