@@ -9,7 +9,6 @@ Score trackers for Eco Cup event hosts, served with GitHub Pages. No login neede
 | Volleyball round robin (Mon, Nov 9) | https://shoeyoung25.github.io/eco-cup/volleyball/ | [`volleyball/index.html`](volleyball/index.html) |
 | Any game: races, trivia, mini games (Tue, Nov 10 onward) | https://shoeyoung25.github.io/eco-cup/games/ | [`games/index.html`](games/index.html) |
 | Game night: Uno, card game, Mario Kart, Smash 4-player, Smash 1v1, with token payouts (Wed, Nov 11) | https://shoeyoung25.github.io/eco-cup/game-night/ | [`game-night/index.html`](game-night/index.html) |
-
 | **Live scores for members (view only):** game night games and team token standings | https://shoeyoung25.github.io/eco-cup/live/ | [`live/index.html`](live/index.html) |
 
 The live scores page only reads `gamenight/results` and has no way to edit. Its payout table must match `GAMES` in `game-night/index.html`.
