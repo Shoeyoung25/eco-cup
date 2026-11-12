@@ -220,7 +220,7 @@ const ROSTER = ROSTER_TSV.split("\n").map(l=>{ const [t,name,user]=l.split("|");
 const GAMES = [
   {id:"uno",    name:"Uno",            min:3, max:6, entry:3, mode:"winner", rule:"3 to 6 players, 3 tokens each. Everyone else gets 1 back; the first player out takes the rest."},
   {id:"card",   name:"Card game",      min:3, max:6, entry:3, mode:"winner", rule:"Bullshit, 3-minute limit. 3 to 6 players, 3 tokens each. Everyone else gets 1 back; the winner takes the rest."},
-  {id:"mk",     name:"Mario Kart",     min:4, max:8, entry:3, mode:"place", pay:[8,3,1,0], eco:2, scoredMax:4, rule:"One 4-race cup, CPUs off. 4 to 8 players. With 4 players: 3 tokens each, paid 8 / 3 / 1 / 0, and the winner earns 2 Eco points. With 5 to 8 players the finishing order is recorded but no tokens or points change for now."},
+  {id:"mk",     name:"Mario Kart",     min:1, max:8, start:4, entry:3, mode:"place", pay:[8,3,1,0], eco:2, scoredOnly:4, rule:"One 4-race cup, CPUs off. Up to 8 players. With exactly 4 players: 3 tokens each, paid 8 / 3 / 1 / 0, and the winner earns 2 Eco points. With any other number the finishing order is recorded but no tokens or points change for now."},
   {id:"smash4", name:"Smash 4-player", min:4, max:4, entry:3, mode:"place", pay:[8,3,1,0], eco:2, rule:"4 players, 3 tokens each, paid 8 / 3 / 1 / 0. The winner also earns 2 Eco points."},
   {id:"smash1", name:"Smash 1v1",      min:2, max:2, entry:5, mode:"place", pay:[10,0], rule:"2 players, 5 tokens each. The winner takes all 10."}
 ];
@@ -250,8 +250,8 @@ function results(gid, players, order){
   const d=G(gid), n=players.length;
   return players.map(p=>{
     const i=order.indexOf(low(p.name));
-    // games bigger than scoredMax are recorded only: no tokens or Eco points change until a points system is decided
-    if(d&&d.scoredMax&&n>d.scoredMax) return {p, place:i>=0?i+1:null, back:d.entry, net:0, eco:0, unscored:true};
+    // games whose size is not scoredOnly are recorded only: no tokens or Eco points change until a points system is decided
+    if(d&&d.scoredOnly&&n!==d.scoredOnly) return {p, place:i>=0?i+1:null, back:d.entry, net:0, eco:0, unscored:true};
     const back = !d ? 0 : d.mode==="winner" ? (i===0 ? d.entry*n-(n-1) : 1) : (i>=0 ? (d.pay[i]||0) : 0);
     return {p, place:i>=0?i+1:null, back, net:d?back-d.entry:0, eco:(d&&d.eco&&i===0)?d.eco:0};
   });
@@ -288,7 +288,7 @@ function Entry(root, init, title){
   }
   function orderHTML(){
     const d=def(), ps=filled();
-    if(ps.length<2) return `<p class="small">Add the players to record the result.</p>`;
+    if(ps.length<Math.min(2,d.min)) return `<p class="small">Add the players to record the result.</p>`;
     const res=results(game,ps,order), done=complete(game,ps,order);
     return res.map(r=>{
       const k=low(r.p.name), on=r.place!==null;
@@ -325,7 +325,7 @@ function Entry(root, init, title){
   });
   root.addEventListener("click",e=>{
     const t=e.target.closest("button"); if(!t||!root.contains(t)) return; const d=t.dataset;
-    if(d.g){ game=d.g; size(); fixOrder(); render(); changed(); }
+    if(d.g){ game=d.g; if(!S.some(x=>x.p)&&def().start) S=Array.from({length:def().start},()=>({p:null,q:""})); size(); fixOrder(); render(); changed(); }
     else if(d.pick!==undefined||d.guest!==undefined){
       const i=+(d.pick!==undefined?d.pick:d.guest); const s=S[i];
       s.p = d.pick!==undefined ? ROSTER.find(r=>r.name===d.name) : {name:s.q.trim().replace(/\s+/g," "),team:null};
@@ -360,7 +360,7 @@ function check(v){
   const d=G(v.game);
   if(!d) return "Pick which game this is at the top.";
   if(v.pending.length) return `Pick “${v.pending[0]}” from the list, or clear that spot.`;
-  if(v.players.length<d.min) return `${d.name} needs ${d.min===d.max?"":"at least "}${d.min} players.`;
+  if(v.players.length<d.min) return `${d.name} needs ${d.min===d.max?"":"at least "}${d.min} player${d.min===1?"":"s"}.`;
   if(v.players.length>d.max) return `${d.name} is ${d.min===d.max?"":"at most "}${d.max} players. Remove one.`;
   if(!complete(v.game,v.players,v.order)) return d.mode==="winner"?"Tap who won.":"Tap everyone's finishing place.";
   return null;
