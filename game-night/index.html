@@ -221,8 +221,9 @@ const GAMES = [
   {id:"uno",    name:"Uno",            min:3, max:6, entry:3, mode:"winner", rule:"3 to 6 players, 3 tokens each. Everyone else gets 1 back; the first player out takes the rest."},
   {id:"card",   name:"Card game",      min:3, max:6, entry:3, mode:"winner", rule:"Bullshit, 3-minute limit. 3 to 6 players, 3 tokens each. Everyone else gets 1 back; the winner takes the rest."},
   {id:"mk",     name:"Mario Kart",     min:1, max:8, start:4, entry:3, mode:"place", pay:[8,3,1,0], eco:2, scoredOnly:4, rule:"One 4-race cup, CPUs off. Up to 8 players. With exactly 4 players: 3 tokens each, paid 8 / 3 / 1 / 0, and the winner earns 2 Eco points. With any other number the finishing order is recorded but no tokens or points change for now."},
-  {id:"smash4", name:"Smash 4-player", min:4, max:4, entry:3, mode:"place", pay:[8,3,1,0], eco:2, rule:"4 players, 3 tokens each, paid 8 / 3 / 1 / 0. The winner also earns 2 Eco points."},
-  {id:"smash1", name:"Smash 1v1",      min:2, max:2, entry:5, mode:"place", pay:[10,0], rule:"2 players, 5 tokens each. The winner takes all 10."}
+  {id:"smash4", name:"Smash",          min:1, max:8, start:4, entry:3, mode:"place", pay:[8,3,1,0], eco:2, scoredOnly:4, rule:"Up to 8 players. With exactly 4 players: 3 tokens each, paid 8 / 3 / 1 / 0, and the winner earns 2 Eco points. With any other number the finishing order is recorded but no tokens or points change for now."},
+  // retired: kept so Smash 1v1 games saved earlier still show and count
+  {id:"smash1", name:"Smash 1v1",      min:2, max:2, entry:5, mode:"place", pay:[10,0], hidden:true, rule:"2 players, 5 tokens each. The winner takes all 10."}
 ];
 const START_TOKENS = 50, TEAMS = 9;
 const DB_PATH = "/gamenight/results";
@@ -299,7 +300,7 @@ function Entry(root, init, title){
   }
   function render(focus){
     const d=def();
-    let h=`<p class="lbl">Which game?</p><div class="chips">${GAMES.map(g=>`<button data-g="${g.id}" class="${g.id===game?"on":""}">${esc(g.name)}</button>`).join("")}</div>`;
+    let h=`<p class="lbl">Which game?</p><div class="chips">${GAMES.filter(g=>!g.hidden||g.id===game).map(g=>`<button data-g="${g.id}" class="${g.id===game?"on":""}">${esc(g.name)}</button>`).join("")}</div>`;
     if(d){
       const fixed=d.min===d.max;
       h+=`<p class="gnum">${esc(title?title(game):d.name)}</p><p class="rule">${esc(d.rule)}</p>
@@ -419,6 +420,7 @@ const DRAFT_KEY="eco-cup-gamenight-draft";
 let draft={game:"",slots:[],order:[]};
 try{ const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null"); if(d&&Array.isArray(d.slots)) draft=d; }catch(e){}
 const newTitle=gid=>`${gname(gid)} · game ${sorted().filter(([,g])=>g.game===gid).length+1}`;
+if(draft.game&&(!G(draft.game)||G(draft.game).hidden)) draft={game:"",slots:[],order:[]};
 const ne=Entry($("neweditor"),{game:draft.game,players:[],order:[]},newTitle);
 if(draft.game&&draft.slots.length){ ne.load({game:draft.game,players:draft.slots.filter(Boolean),order:arr(draft.order)}); }
 function saveDraft(){ try{ const d=ne.draft(); localStorage.setItem(DRAFT_KEY,JSON.stringify(d)); }catch(e){} }
