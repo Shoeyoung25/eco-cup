@@ -53,7 +53,7 @@ main{padding:16px;display:grid;gap:16px;align-content:start;min-width:0}
 .bad{color:var(--danger);font-weight:600}
 .good{color:var(--accent);font-weight:600}
 .teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.tile{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);display:grid;gap:4px;font-size:14px}
+.tile{border:1px solid var(--line);border-left:6px solid var(--tc,var(--line));border-radius:12px;padding:10px;background:var(--surface);display:grid;gap:4px;font-size:14px}
 .tile .tn{font:700 18px var(--display);text-transform:uppercase;display:flex;justify-content:space-between}
 .tile.ok{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
 .tile.no{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 6%,var(--surface))}
@@ -86,7 +86,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <body>
 <div class="app">
 <header>
-  <h1>Trivia Operator</h1>
+  <h1>🌿 Trivia Operator</h1>
   <span class="dot" id="dot"></span>
   <span class="pill" id="phase">…</span>
   <span id="liveinfo" class="muted"></span>
@@ -121,7 +121,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 </div>
 <dialog id="dlg"><form method="dialog"><h2 id="dlgtitle" style="font-size:22px"></h2><div id="dlgbody" style="margin:10px 0 16px"></div><div class="row" style="justify-content:flex-end"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok" id="dlgok">OK</button></div></form></dialog>
 <script type="module">
-import { ROUNDS, round, TEAMS, LETTERS, TOKENS, esc, teamName, playingTeams, arr, autoMark, scoreQuestion, roundResult, effTime, fmtScore, allowedTokens, tokensPlayedBefore } from "./js/core.js";
+import { ROUNDS, round, TEAMS, LETTERS, TOKENS, teamColor, esc, teamName, playingTeams, arr, autoMark, scoreQuestion, roundResult, effTime, fmtScore, allowedTokens, tokensPlayedBefore } from "./js/core.js";
 import { live, get, put, patch, del, now, syncClock, clockInfo, ROOT, MEDIA, SERVER_TS, DB_URL, $, toast } from "./js/db.js";
 
 /* ================= state ================= */
@@ -213,7 +213,21 @@ async function extend(sec) {
 async function reveal(r, n) {
   const q = key(r, n); if (!q) return;
   const text = q.type === "mc" ? `${q.answer}: ${[q.a, q.b, q.c, q.d][LETTERS.indexOf(String(q.answer).toUpperCase())] || ""}` : `${q.answer}${q.unit ? " " + q.unit : ""}`;
-  await w(() => put(`${ROOT}/reveal/${r}/${n}`, { text, letter: q.type === "mc" ? String(q.answer).toUpperCase() : null }));
+  // anonymous numbers for the big screen: how many got it, fastest correct time, and a hidden easter egg or two
+  const sc = qScores(r, n) || {}, rows = Object.entries(sc), R = round(r);
+  const answered = Object.keys(D.answers?.[r]?.[n] || {}).length;
+  const okRows = rows.filter(([, x]) => x.ok);
+  const fastMs = R.timed && okRows.length ? Math.min(...okRows.map(([, x]) => x.ms ?? Infinity)) : null;
+  let egg = null;
+  // Wager round: somebody put a 10 on this one and missed (shown at most once per round)
+  const eggUsed = id => Object.entries(D.reveal?.[r] || {}).some(([k, v]) => Number(k) !== n && v?.egg === id);
+  if (R.scoring === "wager" && rows.some(([t, x]) => x.ok === false && Number(D.wagers?.[r]?.[n]?.[t]?.w) === 10 && D.answers?.[r]?.[n]?.[t]) && !eggUsed("allin")) egg = "allin";
+  await w(() => put(`${ROOT}/reveal/${r}/${n}`, {
+    text, letter: q.type === "mc" ? String(q.answer).toUpperCase() : null,
+    value: q.type === "number" ? Number(q.answer) : null,
+    right: R.scoring === "closest" ? null : okRows.length, answered,
+    fastest: Number.isFinite(fastMs) ? Math.round(fastMs / 100) / 10 : null, egg
+  }));
   await setState({ phase: "reveal" });
 }
 // auto close when the timer runs out
@@ -310,7 +324,7 @@ function renderControl() {
       <span class="disp" style="font-size:34px" id="timerbig"></span></div>
     ${preview}
     <div class="row ctl" style="margin-top:6px">
-      <button class="btn primary next" id="next">${esc(nx.label)} →</button>
+      <button class="btn primary next" id="next" title="Shortcut: N">${esc(nx.label)} →</button>
       <span class="muted" style="margin:0 6px">or for the selected question:</span>
       <button class="btn" id="prepround">Start round ${sel.r}</button>
       <button class="btn" id="prepq" ${q ? "" : "disabled"}>Ready Q${sel.n}</button>
@@ -336,21 +350,21 @@ function tickTimer() {
 
 function renderTiles() {
   const s = S(), r = Number(s.round), n = Number(s.q), teams = playingTeams(D.config);
-  if (!r) { $("tilehead").textContent = "Teams"; $("tilenote").textContent = "Waiting to start"; paint($("tiles"), teams.map(t => `<div class="tile"><div class="tn">${esc(teamName(D.config, t))}</div></div>`).join("")); return; }
+  if (!r) { $("tilehead").textContent = "Teams"; $("tilenote").textContent = "Waiting to start"; paint($("tiles"), teams.map(t => `<div style="--tc:${teamColor(t)}" class="tile"><div class="tn">${esc(teamName(D.config, t))}</div></div>`).join("")); return; }
   const R = round(r);
   if (s.phase === "round" || (s.phase === "qprep" && !n) || s.phase === "roundEnd") {
     $("tilehead").textContent = `Prats tokens · Round ${r}`;
     $("tilenote").textContent = s.tokenLock?.[r] ? "Locked" : `${teams.filter(t => D.tokens?.[r]?.[t]).length} of ${teams.length} decided`;
-    paint($("tiles"), teams.map(t => { const k = D.tokens?.[r]?.[t]; return `<div class="tile ${k ? "ok" : ""}"><div class="tn">${esc(teamName(D.config, t))}</div><div>${k ? (Number(k.k) ? `${TOKENS[k.k].name}` : "No token") : `<span class="muted">${s.tokenLock?.[r] ? "No token" : "Deciding…"}</span>`}</div></div>`; }).join(""));
+    paint($("tiles"), teams.map(t => { const k = D.tokens?.[r]?.[t]; return `<div style="--tc:${teamColor(t)}" class="tile ${k ? "ok" : ""}"><div class="tn">${esc(teamName(D.config, t))}</div><div>${k ? (Number(k.k) ? `${TOKENS[k.k].name}` : "No token") : `<span class="muted">${s.tokenLock?.[r] ? "No token" : "Deciding…"}</span>`}</div></div>`; }).join(""));
     return;
   }
   if (s.phase === "qprep") {
     if (R.scoring === "wager") {
       $("tilehead").textContent = `Weights · Q${n}`; $("tilenote").textContent = `${teams.filter(t => D.wagers?.[r]?.[n]?.[t]).length} of ${teams.length} locked`;
-      paint($("tiles"), teams.map(t => { const x = D.wagers?.[r]?.[n]?.[t]; return `<div class="tile ${x ? "ok" : ""}"><div class="tn">${esc(teamName(D.config, t))}<span>${x ? esc(x.w) : ""}</span></div><div class="muted">${x ? "Locked" : "Choosing…"}</div></div>`; }).join(""));
+      paint($("tiles"), teams.map(t => { const x = D.wagers?.[r]?.[n]?.[t]; return `<div style="--tc:${teamColor(t)}" class="tile ${x ? "ok" : ""}"><div class="tn">${esc(teamName(D.config, t))}<span>${x ? esc(x.w) : ""}</span></div><div class="muted">${x ? "Locked" : "Choosing…"}</div></div>`; }).join(""));
     } else {
       $("tilehead").textContent = `Q${n} ready`; $("tilenote").textContent = "Press Start when you're ready";
-      paint($("tiles"), teams.map(t => `<div class="tile"><div class="tn">${esc(teamName(D.config, t))}</div><div class="muted">${D.tokens?.[r]?.[t]?.k ? TOKENS[D.tokens[r][t].k].name : ""}</div></div>`).join(""));
+      paint($("tiles"), teams.map(t => `<div style="--tc:${teamColor(t)}" class="tile"><div class="tn">${esc(teamName(D.config, t))}</div><div class="muted">${D.tokens?.[r]?.[t]?.k ? TOKENS[D.tokens[r][t].k].name : ""}</div></div>`).join(""));
     }
     return;
   }
@@ -361,7 +375,7 @@ function renderTiles() {
   paint($("tiles"), teams.map(t => {
     const a = ans[t], o = ov[t];
     const secs = a && pub.startAt ? ((effTime(a) - pub.startAt) / 1000).toFixed(1) + " s" : "";
-    if (!k) return `<div class="tile"><div class="tn">${esc(teamName(D.config, t))}</div><div class="muted">${a ? "Answered" : "—"}</div></div>`;
+    if (!k) return `<div style="--tc:${teamColor(t)}" class="tile"><div class="tn">${esc(teamName(D.config, t))}</div><div class="muted">${a ? "Answered" : "—"}</div></div>`;
     const am = a ? autoMark(k, a.v) : { ok: false, flag: null };
     let cls = "", line = "";
     if (R.scoring === "closest") { line = a ? `${fmtScore(r, sc[t]?.err ?? 100)} off` : "No answer · 100%"; cls = a ? "ok" : ""; }
@@ -375,7 +389,7 @@ function renderTiles() {
     const iffy = a && am.flag && R.scoring !== "closest" ? `<div class="iffytext"><span class="warn">${am.flag === "close" ? "Typo?" : "Check:"}</span> “${esc(a.v)}”</div>` : "";
     const acts = R.scoring === "closest" ? `<button data-edit="${t}">Edit</button>${a ? `<button data-clear="${t}">Clear</button>` : ""}`
       : `<button data-mark="${t}" data-v="1" class="${o === true ? "on" : ""}">✓</button><button data-mark="${t}" data-v="0" class="${o === false ? "on" : ""}">✗</button>${o !== undefined ? `<button data-mark="${t}" data-v="">Auto</button>` : ""}<button data-edit="${t}">Edit</button>${a ? `<button data-clear="${t}">Clear</button>` : ""}`;
-    return `<div class="tile ${cls}"><div class="tn">${esc(teamName(D.config, t))}${R.scoring === "wager" && D.wagers?.[r]?.[n]?.[t] ? `<span title="weight">w${esc(D.wagers[r][n][t].w)}</span>` : ""}</div><div>${line}</div>${iffy}<div class="acts">${acts}</div></div>`;
+    return `<div style="--tc:${teamColor(t)}" class="tile ${cls}"><div class="tn">${esc(teamName(D.config, t))}${R.scoring === "wager" && D.wagers?.[r]?.[n]?.[t] ? `<span title="weight">w${esc(D.wagers[r][n][t].w)}</span>` : ""}</div><div>${line}</div>${iffy}<div class="acts">${acts}</div></div>`;
   }).join(""));
 }
 
@@ -716,6 +730,13 @@ async function loadFromRepo(quiet) {
 if (PACK.source !== "manual") loadFromRepo(true);
 else setTimeout(() => toast("Using questions you loaded by hand. Setup → Use repo questions to switch back.", 5000), 800);
 render();
+// keyboard: N runs the Next button (ignored while typing or when a dialog is open)
+document.addEventListener("keydown", e => {
+  if (e.key !== "n" && e.key !== "N") return;
+  if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName || "")) return;
+  if (document.querySelector("dialog[open]")) return;
+  const b = document.getElementById("next"); if (b && !b.disabled && b.offsetParent) { e.preventDefault(); b.click(); }
+});
 </script>
 </body>
 </html>
