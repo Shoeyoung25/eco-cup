@@ -26,9 +26,13 @@ round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,med
 3,mc,Who composed this piece?,Vivaldi,Bach,Mozart,Beethoven,A,,,,,,60,,r3-q5.mp3,common
 3,text,Which film was this song written for?,,,,,8 Mile,Eight Mile,,,,,60,,,niche
 3,mc,Where does this tune come from?,A Russian folk song,Written for the game,A Tchaikovsky ballet,The Soviet anthem,A,,,,,,60,,r3-q7.mp3,niche
-4,text,What is the capital of Australia?,,,,,Canberra,,,,,,45,Geography,,common
-4,mc,Which element has the symbol W?,Tungsten,Zinc,Tin,Titanium,A,,,,,,45,Science,,niche
-4,text,How many players are on a soccer team on the field?,,,,,11,eleven,,,,,45,Sports,,common
+4,text,Which country has won the most FIFA men's World Cups?,,,,,Brazil,,,,,,60,Sports,,common
+4,text,What alias does Walter White use in Breaking Bad?,,,,,Heisenberg,,,,,,60,Film & TV,,common
+4,text,What is the effect that makes a spinning ball curve through the air?,,,,,Magnus effect,Magnus,,,,,60,Physics,,niche
+4,mc,Which country did the croissant originally come from?,France,Austria,Belgium,Italy,B,,,,,,60,Food,,niche
+4,text,In what year did the Berlin Wall fall?,,,,,1989,,,,,,60,History,,common
+4,text,What is the smallest US state by area?,,,,,Rhode Island,,,,,,60,Geography,,common
+4,text,What was the world's first mass-produced hybrid car?,,,,,Toyota Prius,Prius,,,,,60,Cars,,niche
 5,number,How tall is the Eiffel Tower?,,,,,330,,m,0,1000,1,60,,,common
 5,number,In what year was the University of Illinois founded?,,,,,1867,,,1800,2000,1,60,,,niche
 6,mc,What gas do plants take in from the air?,Oxygen,Nitrogen,Carbon dioxide,Helium,C,,,,,,30,,,common
