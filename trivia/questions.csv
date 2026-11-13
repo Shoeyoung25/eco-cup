@@ -1,7 +1,14 @@
 round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,media,level
-1,mc,Which planet is the largest in our solar system?,Mars,Jupiter,Saturn,Neptune,B,,,,,,30,,,common
-1,mc,What does EV stand for?,Electric Vehicle,Energy Valve,Engine Voltage,Eco Velocity,A,,,,,,30,,,common
-1,mc,In what year did Illinois become a state?,1776,1818,1848,1865,B,,,,,,30,,,niche
+1,text,What is the most abundant gas in Earth's atmosphere?,,,,,Nitrogen,N2,,,,,30,,,common
+1,mc,Which letter does not appear in any US state name?,J,X,Q,Z,C,,,,,,30,,,niche
+1,mc,What is the largest ocean on Earth?,Pacific,Atlantic,Indian,Arctic,A,,,,,,30,,,common
+1,text,What is the longest river in Europe?,,,,,Volga,Volga River,,,,,30,,,niche
+1,mc,What is the capital of Canada?,Toronto,Montreal,Ottawa,Vancouver,C,,,,,,30,,,common
+1,mc,Which country has more pyramids than Egypt?,Sudan,Mexico,Peru,China,A,,,,,,30,,,niche
+1,text,How many leads does our club have (not counting the president and chief engineer)?,,,,,12,twelve,,,,,30,,,niche
+1,mc,Which country has the most natural lakes?,Russia,Canada,USA,Finland,B,,,,,,30,,,niche
+1,mc,Which blood type is the universal donor?,AB+,A-,B+,O-,D,,,,,,30,,,common
+1,mc,Which planet has the shortest day?,Jupiter,Mercury,Earth,Mars,A,,,,,,30,,,niche
 2,text,Which car brand has a prancing horse logo?,,,,,Ferrari,,,,,,60,,,common
 2,mc,How many sides does a stop sign have?,6 sides,7 sides,8 sides,10 sides,C,,,,,,45,,,common
 3,text,Who sang Bohemian Rhapsody?,,,,,Queen,Freddie Mercury,,,,,60,,,common
