@@ -34,6 +34,11 @@ round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,med
 4,text,What is the smallest US state by area?,,,,,Rhode Island,,,,,,60,Geography,,common
 4,text,What was the world's first mass-produced hybrid car?,,,,,Toyota Prius,Prius,,,,,60,Cars,,niche
 5,number,How tall is the Eiffel Tower?,,,,,330,,m,0,1000,1,60,,,common
-5,number,In what year was the University of Illinois founded?,,,,,1867,,,1800,2000,1,60,,,niche
+5,number,How many countries are members of the United Nations?,,,,,193,,,0,300,1,60,,,common
+5,number,What is the average distance from Earth to the Moon?,,,,,384400,,km,0,1000000,100,60,,,niche
+5,number,How many bones are in the adult human body?,,,,,206,,,0,500,1,60,,,common
+5,number,The PAC-Car II set a fuel-economy world record in 2005. How many km per litre did it get?,,,,,5385,,km/L,0,10000,1,60,,,niche
+5,number,What is the driving distance from Champaign to Chicago?,,,,,135,,miles,0,500,1,60,,,common
+5,number,What is the nominal voltage of the battery pack in the car our club is building right now?,,,,,51.8,,V,0,200,0.1,60,,,niche
 6,mc,What gas do plants take in from the air?,Oxygen,Nitrogen,Carbon dioxide,Helium,C,,,,,,30,,,common
 6,mc,Which company makes the Model 3?,Ford,Tesla,Rivian,Lucid,B,,,,,,30,,,common
