@@ -1,4 +1,4 @@
-round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,media,level
+round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,media,level,exact
 1,text,What is the most abundant gas in Earth's atmosphere?,,,,,Nitrogen,N2,,,,,30,,,common
 1,mc,Which letter does not appear in any US state name?,J,X,Q,Z,C,,,,,,30,,,niche
 1,mc,What is the largest ocean on Earth?,Pacific,Atlantic,Indian,Arctic,A,,,,,,30,,,common
@@ -40,5 +40,13 @@ round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,med
 5,number,The PAC-Car II set a fuel-economy world record in 2005. How many km per litre did it get?,,,,,5385,,km/L,0,10000,1,60,,,niche
 5,number,What is the driving distance from Champaign to Chicago?,,,,,135,,miles,0,500,1,60,,,common
 5,number,What is the nominal voltage of the battery pack in the car our club is building right now?,,,,,51.8,,V,0,200,0.1,60,,,niche
-6,mc,What gas do plants take in from the air?,Oxygen,Nitrogen,Carbon dioxide,Helium,C,,,,,,30,,,common
-6,mc,Which company makes the Model 3?,Ford,Tesla,Rivian,Lucid,B,,,,,,30,,,common
+6,mc,Which company makes the Model Y?,Ford,Rivian,Tesla,Lucid,C,,,,,,30,,,common
+6,mc,What does a kilowatt-hour (kWh) measure?,Energy,Power,Voltage,Current,A,,,,,,30,,,common
+6,mc,In an electric car what does the inverter do?,Steps the battery down to 12 V,Turns battery DC into AC for the motor,Turns charger AC into DC for the battery,Reverses the motor for reverse gear,B,,,,,,30,,,niche
+6,mc,Which film made the line I'll be back famous?,Die Hard,RoboCop,Predator,The Terminator,D,,,,,,30,,,common
+6,mc,Which Top Gear presenter crashed a jet-powered dragster at about 288 mph in 2006?,Richard Hammond,James May,Jeremy Clarkson,The Stig,A,,,,,,30,,,niche
+6,mc,Which source makes the most renewable electricity worldwide?,Solar,Wind,Hydropower,Geothermal,C,,,,,,30,,,niche
+6,text,Type Prats's full name: first + middle + last. Spelling counts!,,,,,Pratyush Ashok Anand,,,,,,30,,,common,yes
+6,mc,What is the lightest metal?,Aluminium,Magnesium,Titanium,Lithium,D,,,,,,30,,,niche
+6,mc,Which artist's tour is the highest-grossing tour of all time?,Beyoncé,Coldplay,Taylor Swift,Ed Sheeran,C,,,,,,30,,,common
+6,mc,In what year was the first Shell Eco-marathon held?,1965,1985,2000,2010,B,,,,,,30,,,niche

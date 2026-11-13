@@ -313,6 +313,7 @@ function renderControl() {
     preview = `<div class="preview"><div class="qt">${esc(q.question || "(no question text)")}</div>${opts}
       <div class="kv"><span><b>Type</b>${{ mc: "Multiple choice", text: "Typed", number: "Number" }[q.type] || q.type}</span>
       ${q.type !== "mc" ? `<span><b>Answer</b>${esc(q.answer)}${q.unit ? " " + esc(q.unit) : ""}</span>` : ""}
+      ${q.exact ? `<span><b>Spelling</b>Exact, typos marked wrong</span>` : ""}
       ${q.alts?.length ? `<span><b>Also accept</b>${esc(q.alts.join(", "))}</span>` : ""}
       ${q.type === "number" ? `<span><b>Slider</b>${esc(q.min || 0)} to ${esc(q.max || 100)}</span>` : ""}
       ${q.hint ? `<span><b>Hint</b>${esc(q.hint)}</span>` : ""}
@@ -458,7 +459,7 @@ function renderSetup() {
     <p style="margin:0 0 8px">Questions load automatically from <code>trivia/questions.csv</code> in the eco-cup repo every time this page opens. <a href="${EDIT_URL}" target="_blank" rel="noopener">Edit it on GitHub</a>, commit, wait about a minute, then press Reload.</p>
     <div class="row" style="margin-bottom:10px"><button class="btn primary" id="reloadrepo">${PACK.source === "manual" ? "Use repo questions" : "Reload from repo"}</button></div>
     <details><summary class="muted">Format, and loading a different pack by hand</summary>
-    <p class="muted" style="margin:8px 0">One row per question. Columns: <code>round, type, question, a, b, c, d, answer, alternatives, unit, min, max, step, timer, hint, media, level</code>. Type is mc, text or number. For mc the answer is A, B, C or D. Alternatives are separated by |. </p>
+    <p class="muted" style="margin:8px 0">One row per question. Columns: <code>round, type, question, a, b, c, d, answer, alternatives, unit, min, max, step, timer, hint, media, level, exact</code>. Type is mc, text or number. Put yes in exact for a typed answer that must be spelled exactly. For mc the answer is A, B, C or D. Alternatives are separated by |. </p>
     <div class="row"><input type="file" id="packfile" accept=".csv,.tsv,text/csv,text/plain"><button class="btn" id="pastebtn">Paste from a spreadsheet</button></div>
     <textarea id="pastebox" rows="6" style="width:100%;margin-top:8px" placeholder="Copy the whole sheet (with the header row) and paste here" hidden></textarea>
     <button class="btn primary" id="pasteload" style="margin-top:6px" hidden>Load pasted questions</button></details>
@@ -522,7 +523,7 @@ function loadPackText(text, name, source = "manual", quiet = false) {
   if (rows.length < 2) { toast("No questions found. Include the header row."); return false; }
   const head = rows[0].map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
   const col = n => head.indexOf(n);
-  const alias = { question: ["question", "q", "text"], answer: ["answer", "key"], alternatives: ["alternatives", "alts", "alsoaccept", "accept"], round: ["round", "r"], type: ["type"], level: ["level", "difficulty", "commonniche"] };
+  const alias = { question: ["question", "q", "text"], answer: ["answer", "key"], alternatives: ["alternatives", "alts", "alsoaccept", "accept"], round: ["round", "r"], type: ["type"], level: ["level", "difficulty", "commonniche"], exact: ["exact", "exactspelling", "strict"] };
   const find = n => { for (const a of alias[n] || [n]) { const i = col(a); if (i >= 0) return i; } return -1; };
   const get = (r, n) => { const i = find(n); return i >= 0 ? String(r[i] ?? "").trim() : ""; };
   if (find("round") < 0 || find("question") < 0) { toast("The header needs at least round and question columns."); return; }
@@ -532,6 +533,7 @@ function loadPackText(text, name, source = "manual", quiet = false) {
     let type = get(r, "type").toLowerCase();
     type = type.startsWith("m") ? "mc" : type.startsWith("n") ? "number" : type ? "text" : (rn === 5 ? "number" : "text");
     const q = { type, question: get(r, "question"), a: get(r, "a"), b: get(r, "b"), c: get(r, "c"), d: get(r, "d"), answer: get(r, "answer"), alts: get(r, "alternatives").split("|").map(x => x.trim()).filter(Boolean), unit: get(r, "unit"), min: get(r, "min"), max: get(r, "max"), step: get(r, "step"), timer: get(r, "timer"), hint: get(r, "hint"), media: get(r, "media"), level: get(r, "level") };
+    if (type === "text" && /^(y|yes|1|true|x|exact)$/i.test(get(r, "exact"))) q.exact = true;
     if (type === "mc") q.answer = q.answer.toUpperCase();
     (rounds[rn] = rounds[rn] || []).push(q);
   }
