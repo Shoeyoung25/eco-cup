@@ -9,8 +9,16 @@ round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,med
 1,mc,Which country has the most natural lakes?,Russia,Canada,USA,Finland,B,,,,,,30,,,niche
 1,mc,Which blood type is the universal donor?,AB+,A-,B+,O-,D,,,,,,30,,,common
 1,mc,Which planet has the shortest day?,Jupiter,Mercury,Earth,Mars,A,,,,,,30,,,niche
-2,text,Which car brand has a prancing horse logo?,,,,,Ferrari,,,,,,60,,,common
-2,mc,How many sides does a stop sign have?,6 sides,7 sides,8 sides,10 sides,C,,,,,,45,,,common
+2,text,Which car brand's logo is this?,,,,,Subaru,,,,,,60,,r2-q1-logo.png,common
+2,mc,Which country's flag is this?,Nepal,Bhutan,Tibet,Myanmar,B,,,,,,60,,r2-q2-flag.png,niche
+2,text,Name this landmark.,,,,,Christ the Redeemer,Cristo Redentor|Christ Redeemer|Rio,,,,,60,,r2-q3-landmark.jpg,common
+2,text,Where on campus is this?,,,,,Alma Mater,Alma Mater statue,,,,,60,,r2-q4-campus.jpg,niche
+2,text,What component is this circuit symbol?,,,,,Diode,,,,,,60,,r2-q5-symbol.png,common
+2,mc,What is this car part?,Alternator,CV joint,Turbocharger,Starter motor,C,,,,,,60,,r2-q6-part.jpg,niche
+2,mc,What type of bridge is this?,Cantilever,Arch,Suspension,Cable-stayed,D,,,,,,60,,r2-q7-bridge.jpg,common
+2,text,Which country is this landmark in?,,,,,Jordan,,,,,,60,,r2-q8-landmark.jpg,niche
+2,text,Name this scientist.,,,,,Marie Curie,Curie|Marie Sklodowska Curie,,,,,60,,r2-q9-face.jpg,common
+2,text,Which US state is this? (shown upside down),,,,,Tennessee,,,,,,60,,r2-q10-outline.png,niche
 3,text,Who sang Bohemian Rhapsody?,,,,,Queen,Freddie Mercury,,,,,60,,,common
 3,mc,Which instrument has 88 keys?,Organ,Piano,Accordion,Harpsichord,B,,,,,,45,,,common
 4,text,What is the capital of Australia?,,,,,Canberra,,,,,,45,Geography,,common
