@@ -441,14 +441,17 @@ function renderSetup() {
   const counts = ROUNDS.map(R => `${R.n}. ${esc(R.name)}: <b>${qs(R.n).length}</b>`).join(" · ");
   const issues = packIssues();
   paint($("packcard"), `<h2>Question pack</h2>
-    <p class="muted" style="margin:0 0 8px">One row per question. Columns: <code>round, type, question, a, b, c, d, answer, alternatives, unit, min, max, step, timer, hint, media, level</code>. Type is mc, text or number. For mc the answer is A, B, C or D. Alternatives are separated by |. <a href="sample-pack.csv" download>Download a sample</a>.</p>
+    <p style="margin:0 0 8px">Questions load automatically from <code>trivia/questions.csv</code> in the eco-cup repo every time this page opens. <a href="${EDIT_URL}" target="_blank" rel="noopener">Edit it on GitHub</a>, commit, wait about a minute, then press Reload.</p>
+    <div class="row" style="margin-bottom:10px"><button class="btn primary" id="reloadrepo">${PACK.source === "manual" ? "Use repo questions" : "Reload from repo"}</button></div>
+    <details><summary class="muted">Format, and loading a different pack by hand</summary>
+    <p class="muted" style="margin:8px 0">One row per question. Columns: <code>round, type, question, a, b, c, d, answer, alternatives, unit, min, max, step, timer, hint, media, level</code>. Type is mc, text or number. For mc the answer is A, B, C or D. Alternatives are separated by |. </p>
     <div class="row"><input type="file" id="packfile" accept=".csv,.tsv,text/csv,text/plain"><button class="btn" id="pastebtn">Paste from a spreadsheet</button></div>
     <textarea id="pastebox" rows="6" style="width:100%;margin-top:8px" placeholder="Copy the whole sheet (with the header row) and paste here" hidden></textarea>
-    <button class="btn primary" id="pasteload" style="margin-top:6px" hidden>Load pasted questions</button>
+    <button class="btn primary" id="pasteload" style="margin-top:6px" hidden>Load pasted questions</button></details>
     <p style="margin:10px 0 4px">${PACK.name ? `Loaded <b>${esc(PACK.name)}</b>${PACK.loadedAt ? ` (${new Date(PACK.loadedAt).toLocaleString()})` : ""}` : "<span class='warn'>No pack loaded yet</span>"}</p>
     <p class="muted" style="margin:0">${counts}</p>
     ${issues.length ? `<div class="warn" style="margin-top:8px">Check these:<ul style="margin:4px 0 0">${issues.slice(0, 15).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : PACK.name ? `<p class="good" style="margin-top:8px">Pack looks good.</p>` : ""}
-    <p class="muted" style="font-size:13px">The pack, with its answers, stays in this browser only. Questions go to the players' pages when you open them, and answers never do.</p>`);
+    <p class="muted" style="font-size:13px">Players' pages only get a question when you open it, and never the answer. The eco-cup repo is public, though, so someone who finds questions.csv on GitHub could read the answers.</p>`);
   const needed = [...new Set(ROUNDS.flatMap(R => qs(R.n).map(q => q.media).filter(Boolean)))];
   paint($("mediacard"), `<h2>Pictures and music</h2>
     <p class="muted" style="margin:0 0 8px">Upload the files named in the pack's media column. They're stored online so the question screen can run on any computer. Music clips must be under 30 seconds (the screen plays each twice).</p>
@@ -500,9 +503,9 @@ function parseTable(text) {
   if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
   return rows.filter(r => r.some(x => String(x).trim() !== ""));
 }
-function loadPackText(text, name) {
+function loadPackText(text, name, source = "manual", quiet = false) {
   const rows = parseTable(text.replace(/^﻿/, ""));
-  if (rows.length < 2) { toast("No questions found. Include the header row."); return; }
+  if (rows.length < 2) { toast("No questions found. Include the header row."); return false; }
   const head = rows[0].map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
   const col = n => head.indexOf(n);
   const alias = { question: ["question", "q", "text"], answer: ["answer", "key"], alternatives: ["alternatives", "alts", "alsoaccept", "accept"], round: ["round", "r"], type: ["type"], level: ["level", "difficulty", "commonniche"] };
@@ -518,8 +521,8 @@ function loadPackText(text, name) {
     if (type === "mc") q.answer = q.answer.toUpperCase();
     (rounds[rn] = rounds[rn] || []).push(q);
   }
-  PACK = { name, loadedAt: Date.now(), rounds }; savePack();
-  toast(`Loaded ${Object.values(rounds).reduce((a, x) => a + x.length, 0)} questions`);
+  PACK = { name, source, loadedAt: Date.now(), rounds }; savePack();
+  if (!quiet) toast(`Loaded ${Object.values(rounds).reduce((a, x) => a + x.length, 0)} questions`);
   setState({ nq: nqAll() });
   render();
 }
@@ -620,6 +623,7 @@ $("main").addEventListener("click", async e => {
   if (id === "pastebtn") { $("pastebox").hidden = false; $("pasteload").hidden = false; $("pastebox").focus(); return; }
   if (id === "pasteload") return loadPackText($("pastebox").value, "Pasted questions");
   if (id === "mediarefresh") return listMedia();
+  if (id === "reloadrepo") return loadFromRepo(false);
   if (id === "tolobby") { if (await ask("Go back to the lobby?", "<p>The big screen and every phone go back to the join screen. No data is lost.</p>", "Go to lobby")) setState({ phase: "lobby", round: 0, q: 0, screen: "q" }); return; }
   if (id === "reset") return resetNight();
   const del_ = t.closest("[data-delmedia]");
@@ -697,7 +701,20 @@ function copyCSV() {
   navigator.clipboard.writeText(lines.join("\n")).then(() => toast("Copied. Paste into a spreadsheet."), () => toast("Couldn't copy"));
 }
 
-setTimeout(() => { if (!PACK.name) toast("Load your question pack in Setup to begin", 4000); }, 800);
+// Questions come from trivia/questions.csv in this repo, loaded every time the page opens.
+const REPO_FILE = "questions.csv", EDIT_URL = "https://github.com/Shoeyoung25/eco-cup/edit/main/trivia/questions.csv";
+async function loadFromRepo(quiet) {
+  try {
+    const r = await fetch(`${REPO_FILE}?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error("status " + r.status);
+    const before = JSON.stringify(PACK.rounds);
+    loadPackText(await r.text(), "questions.csv in the eco-cup repo", "repo", true);
+    const n = Object.values(PACK.rounds).reduce((a, x) => a + x.length, 0);
+    if (!quiet || before !== JSON.stringify(PACK.rounds)) toast(`${n} questions loaded from the repo${before !== JSON.stringify(PACK.rounds) && before !== "{}" ? " (changed since last time)" : ""}`);
+  } catch (e) { toast("Couldn't load questions.csv from the repo: " + e.message, 5000); }
+}
+if (PACK.source !== "manual") loadFromRepo(true);
+else setTimeout(() => toast("Using questions you loaded by hand. Setup → Use repo questions to switch back.", 5000), 800);
 render();
 </script>
 </body>
