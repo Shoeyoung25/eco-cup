@@ -129,7 +129,11 @@ let D = {}, OK = false;
 let PACK = loadPack();             // {name, rounds:{1:[q,...]}}
 let sel = { r: 1, n: 1 };          // what the operator is looking at
 let followLive = true;             // selection follows the live question until the operator clicks elsewhere
-let tab = "run", resultsOpen = false, resultOverride = {}, mediaKeys = null;
+let tab = "run", resultsOpen = false, resultOverride = {}, mediaKeys = null, repoKeys = new Set();
+// media files shipped with the site (eco-cup-live/trivia/media/), used when nothing was uploaded under that name
+const REPO_MEDIA = "https://shoeyoung25.github.io/eco-cup-live/trivia/media/";
+const repoMediaUrl = k => { const x = String(k).match(/_([a-z0-9]+)$/); return x ? REPO_MEDIA + k.slice(0, -x[0].length) + "." + x[1] : null; };
+const haveMedia = k => !!mediaKeys && (mediaKeys.has(k) || repoKeys.has(k));
 const db = live((d, ok) => { D = d; OK = ok; if (followLive) syncSel(); render(); });
 syncClock();
 const S = () => D.state || { phase: "lobby" };
@@ -309,7 +313,7 @@ function renderControl() {
   if (q) {
     const opts = q.type === "mc" ? `<div class="row">${LETTERS.map((L, i) => `<span class="opt ${String(q.answer).toUpperCase() === L ? "key" : ""}">${L}: ${esc([q.a, q.b, q.c, q.d][i] || "")}</span>`).join("")}</div>` : "";
     const mk = q.media ? mediaKey(q.media) : "";
-    const mstate = !q.media ? "" : mediaKeys === null ? "" : mediaKeys.has(mk) ? `<span class="good">uploaded</span>` : `<span class="bad">not uploaded</span>`;
+    const mstate = !q.media ? "" : mediaKeys === null ? "" : mediaKeys.has(mk) ? `<span class="good">uploaded</span>` : repoKeys.has(mk) ? `<span class="good">built in</span>` : `<span class="bad">not uploaded</span>`;
     preview = `<div class="preview"><div class="qt">${esc(q.question || "(no question text)")}</div>${opts}
       <div class="kv"><span><b>Type</b>${{ mc: "Multiple choice", text: "Typed", number: "Number" }[q.type] || q.type}</span>
       ${q.type !== "mc" ? `<span><b>Answer</b>${esc(q.answer)}${q.unit ? " " + esc(q.unit) : ""}</span>` : ""}
@@ -472,8 +476,8 @@ function renderSetup() {
     <p class="muted" style="margin:0 0 8px">Upload the files named in the pack's media column. They're stored online so the question screen can run on any computer. Music clips must be under 30 seconds (the screen plays each twice).</p>
     <div class="row"><input type="file" id="mediafile" multiple accept="image/*,audio/*"><button class="btn" id="mediarefresh">Refresh list</button></div>
     <p id="mediaprog" class="muted" style="margin:6px 0"></p>
-    ${needed.length ? `<p style="margin:6px 0">Pack needs ${needed.length} file${needed.length > 1 ? "s" : ""}: ${needed.map(m => mediaKeys && mediaKeys.has(mediaKey(m)) ? `<span class="good">${esc(m)}</span>` : `<span class="bad">${esc(m)}</span>`).join(", ")}</p>` : ""}
-    <div class="medialist">${mediaKeys === null ? "<span class='muted'>Loading…</span>" : [...mediaKeys].sort().map(k => `<div><span>${esc(k)}</span><button class="btn" style="padding:2px 8px" data-delmedia="${esc(k)}">Delete</button></div>`).join("") || "<span class='muted'>Nothing uploaded yet</span>"}</div>`);
+    ${needed.length ? `<p style="margin:6px 0">Pack needs ${needed.length} file${needed.length > 1 ? "s" : ""}: ${needed.map(m => haveMedia(mediaKey(m)) ? `<span class="good">${esc(m)}</span>` : `<span class="bad">${esc(m)}</span>`).join(", ")}</p>` : ""}
+    <div class="medialist">${mediaKeys === null ? "<span class='muted'>Loading…</span>" : [...mediaKeys].sort().map(k => `<div><span>${esc(k)}</span><button class="btn" style="padding:2px 8px" data-delmedia="${esc(k)}">Delete</button></div>`).join("") + [...repoKeys].filter(k => !mediaKeys.has(k)).sort().map(k => `<div><span>${esc(k)}</span><span class="muted">built in</span></div>`).join("") || "<span class='muted'>Nothing uploaded yet</span>"}</div>`);
   paint($("teamscard"), `<h2>Teams</h2><p class="muted" style="margin:0 0 8px">Untick teams that aren't here tonight, so they're left out of rankings and the bottom 2.</p>
     <table class="grid"><thead><tr><th>Playing</th><th>Team</th><th>Display name</th></tr></thead><tbody>
     ${TEAMS.map(t => `<tr><td><input type="checkbox" data-playing="${t}" ${D.config?.teams?.[t]?.playing === false ? "" : "checked"}></td><td>${t}</td><td><input type="text" data-tname="${t}" placeholder="Team ${t}" value="${esc(D.config?.teams?.[t]?.name || "")}"></td></tr>`).join("")}</tbody></table>`);
@@ -497,7 +501,7 @@ function packIssues() {
     if (R.scoring === "closest" && q.type !== "number") out.push(`${where}: Closest Wins questions should be type number`);
     if (q.type !== "mc" && !String(q.answer ?? "").trim()) out.push(`${where}: no answer`);
     if (!R.timed && Number(q.timer) > 60) out.push(`${where}: timer over 60 s, it will be cut to 60`);
-    if (q.media && mediaKeys && !mediaKeys.has(mediaKey(q.media))) out.push(`${where}: media “${q.media}” not uploaded`);
+    if (q.media && mediaKeys && !haveMedia(mediaKey(q.media))) out.push(`${where}: media “${q.media}” not uploaded`);
   }));
   if (qs(4).length > 10) out.push("Wager round has more than 10 questions, but there are only 10 weights");
   return out;
@@ -549,6 +553,9 @@ async function listMedia() {
     const r = await fetch(`${DB_URL}${MEDIA}.json?shallow=true`, { cache: "no-store" });
     const j = await r.json(); mediaKeys = new Set(Object.keys(j || {}));
   } catch (e) { mediaKeys = mediaKeys || new Set(); }
+  // files built into the site count as available too (an upload with the same name wins)
+  const want = [...new Set(ROUNDS.flatMap(R => qs(R.n).map(q => q.media).filter(Boolean)).map(mediaKey))].filter(k => !mediaKeys.has(k) && !repoKeys.has(k));
+  await Promise.all(want.map(k => { const u = repoMediaUrl(k); return u ? fetch(u, { method: "HEAD", cache: "no-store" }).then(r => { if (r.ok) repoKeys.add(k); }).catch(() => {}) : null; }));
   render();
 }
 function readAsDataURL(file) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); }); }
