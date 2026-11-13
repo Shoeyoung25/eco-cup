@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trivia Operator</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="js/base.css">
+<style>
+/* Operator dashboard: runs the whole night. Players' pages live in the eco-cup-live repo. */
+body{font-size:15px}
+.app{display:grid;grid-template-columns:auto 1fr;min-height:100vh}
+header{grid-column:1/-1;position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header h1{font-size:22px}
+.pill{border-radius:99px;padding:3px 10px;font:700 13px var(--display);text-transform:uppercase;letter-spacing:.05em;background:var(--hl);border:1px solid var(--line)}
+.pill.open{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.grow{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:7px 12px;font-weight:600;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--fg);color:var(--bg)}
+aside{border-right:1px solid var(--line);width:270px;padding:12px;overflow:auto;position:sticky;top:53px;height:calc(100vh - 53px)}
+aside.collapsed{width:44px;padding:12px 6px}
+aside.collapsed .side-body{display:none}
+.side-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.side-head button{border:1px solid var(--line);background:var(--surface);border-radius:8px;width:30px;height:30px;font-weight:700}
+.rnd{margin-bottom:10px}
+.rnd>button{width:100%;text-align:left;border:0;background:none;padding:6px 4px;font:700 16px var(--display);text-transform:uppercase;display:flex;justify-content:space-between}
+.rnd>button.sel{color:var(--accent)}
+.qs{list-style:none;margin:0;padding:0}
+.qs button{width:100%;text-align:left;border:0;background:none;padding:5px 6px;border-radius:6px;display:flex;gap:6px;align-items:baseline;font-size:13px}
+.qs button:hover{background:var(--hl)}
+.qs button.sel{background:var(--hl);outline:1px solid var(--accent)}
+.qs button.live{font-weight:700}
+.qs .n{flex:none;width:26px;color:var(--muted)}
+.qs .t{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qs .st{flex:none}
+.lvl{font-size:11px;color:var(--muted)}
+main{padding:16px;display:grid;gap:16px;align-content:start;min-width:0}
+.card h2{font-size:20px;margin-bottom:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ctl button{padding:10px 14px}
+.next{font-size:18px;padding:12px 20px!important}
+.preview{display:grid;gap:6px;margin:10px 0}
+.preview .qt{font-size:18px;font-weight:600}
+.opt{padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
+.opt.key{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface));font-weight:700}
+.kv{display:flex;gap:16px;flex-wrap:wrap;font-size:14px}
+.kv b{color:var(--muted);font-weight:600;margin-right:4px}
+.warn{color:var(--warn);font-weight:600}
+.bad{color:var(--danger);font-weight:600}
+.good{color:var(--accent);font-weight:600}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--surface);display:grid;gap:4px;font-size:14px}
+.tile .tn{font:700 18px var(--display);text-transform:uppercase;display:flex;justify-content:space-between}
+.tile.ok{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.tile.no{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 6%,var(--surface))}
+.tile.iffy{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 10%,var(--surface))}
+.tile .acts{display:flex;gap:4px;flex-wrap:wrap}
+.tile .acts button{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:3px 8px;font-size:13px}
+.tile .acts button.on{background:var(--fg);color:var(--bg)}
+.iffytext{font-size:13px;overflow-wrap:anywhere}
+table.grid{border-collapse:collapse;font-size:14px;width:100%}
+table.grid th,table.grid td{border:1px solid var(--line);padding:5px 7px;text-align:center}
+table.grid th{background:var(--hl);font-weight:600}
+table.grid td.t{text-align:left;font-weight:600;white-space:nowrap}
+table.grid td.c{cursor:pointer}
+table.grid td.c:hover{outline:2px solid var(--accent)}
+table.grid td.ovr{text-decoration:underline dotted}
+.wrapx{overflow-x:auto}
+input[type=text],input[type=number],select,textarea{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--surface)}
+input.small{width:70px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--fg);max-width:480px;width:calc(100% - 32px)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.tabs{display:flex;gap:6px}
+.tabs button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;font-weight:600}
+.tabs button.on{background:var(--fg);color:var(--bg)}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.split{grid-template-columns:1fr}.app{grid-template-columns:1fr}aside{position:static;width:auto;height:auto}}
+.medialist{max-height:260px;overflow:auto;font-size:13px}
+.medialist div{display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>Trivia Operator</h1>
+  <span class="dot" id="dot"></span>
+  <span class="pill" id="phase">…</span>
+  <span id="liveinfo" class="muted"></span>
+  <span class="grow"></span>
+  <span class="muted">Big screen:</span>
+  <div class="seg" id="screenseg"><button data-screen="q">Questions</button><button data-screen="scores">Scores</button><button data-screen="blank">Blank</button></div>
+  <div class="tabs" id="tabs"><button data-tab="run" class="on">Run</button><button data-tab="scores">Scores</button><button data-tab="setup">Setup</button></div>
+</header>
+<aside id="side">
+  <div class="side-head"><b class="disp side-body">Rounds</b><button id="sidetoggle" title="Collapse or expand">‹</button></div>
+  <div class="side-body" id="sidebody"></div>
+</aside>
+<main id="main">
+  <section id="tab-run">
+    <div class="card" id="control"></div>
+    <div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><h2 id="tilehead">Teams</h2><span class="muted" id="tilenote"></span></div><div class="teams" id="tiles"></div></div>
+    <div class="card" style="margin-top:16px" id="review"></div>
+    <div class="card" style="margin-top:16px" id="results" hidden></div>
+  </section>
+  <section id="tab-scores" hidden><div class="card" id="scores"></div></section>
+  <section id="tab-setup" hidden>
+    <div class="split">
+      <div class="card" id="packcard"></div>
+      <div class="card" id="mediacard"></div>
+    </div>
+    <div class="split" style="margin-top:16px">
+      <div class="card" id="teamscard"></div>
+      <div class="card" id="nightcard"></div>
+    </div>
+  </section>
+</main>
+</div>
+<dialog id="dlg"><form method="dialog"><h2 id="dlgtitle" style="font-size:22px"></h2><div id="dlgbody" style="margin:10px 0 16px"></div><div class="row" style="justify-content:flex-end"><button class="btn" value="cancel">Cancel</button><button class="btn primary" value="ok" id="dlgok">OK</button></div></form></dialog>
+<script type="module">
+import { ROUNDS, round, TEAMS, LETTERS, TOKENS, esc, teamName, playingTeams, arr, autoMark, scoreQuestion, roundResult, effTime, fmtScore, allowedTokens, tokensPlayedBefore } from "./js/core.js";
+import { live, get, put, patch, del, now, syncClock, clockInfo, ROOT, MEDIA, SERVER_TS, DB_URL, $, toast } from "./js/db.js";
+
+/* ================= state ================= */
+let D = {}, OK = false;
+let PACK = loadPack();             // {name, rounds:{1:[q,...]}}
+let sel = { r: 1, n: 1 };          // what the operator is looking at
+let followLive = true;             // selection follows the live question until the operator clicks elsewhere
+let tab = "run", resultsOpen = false, resultOverride = {}, mediaKeys = null;
+const db = live((d, ok) => { D = d; OK = ok; if (followLive) syncSel(); render(); });
+syncClock();
+const S = () => D.state || { phase: "lobby" };
+
+function loadPack() { try { return JSON.parse(localStorage.getItem("trivia-pack") || "null") || { rounds: {} }; } catch (e) { return { rounds: {} }; } }
+function savePack() { try { localStorage.setItem("trivia-pack", JSON.stringify(PACK)); } catch (e) { toast("Couldn't save the pack in this browser"); } }
+const qs = r => PACK.rounds?.[r] || [];
+const key = (r, n) => qs(r)[n - 1];
+const mediaKey = name => String(name || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+const AUDIO_EXT = /\.(mp3|wav|m4a|aac|ogg|oga|flac|webm)$/i;
+const qpub = (r, n) => D.q?.[r]?.[n] || {};
+const started = (r, n) => !!qpub(r, n).startAt;
+function syncSel() { const s = S(); if (s.round) { sel.r = Number(s.round); sel.n = Number(s.q) || (sel.r === Number(s.round) ? sel.n : 1) || 1; } }
+
+/* ================= writes ================= */
+async function w(fn, msg) {
+  try { await fn(); return true; } catch (e) { toast((msg || "Didn't save") + ": " + (e.message || "check the connection")); return false; }
+}
+const setState = obj => w(() => patch(`${ROOT}/state`, obj), "Couldn't change the state");
+
+function limitFor(r, q) {
+  const R = round(r);
+  let L = Number($("limit")?.value) || Number(q?.timer) || R.limit;
+  if (!R.timed) L = Math.min(L, 60);
+  return Math.max(5, Math.round(L));
+}
+function nqAll() { const o = {}; ROUNDS.forEach(R => (o[R.n] = qs(R.n).length)); return o; }
+
+async function prepRound(r) {
+  resultsOpen = false;
+  await setState({ round: r, q: 0, phase: "round", startAt: null, closeAt: null, nq: nqAll(), screen: S().screen === "blank" ? "blank" : "q" });
+  sel = { r, n: 1 }; followLive = true;
+}
+async function prepQuestion(r, n) {
+  const q = key(r, n); if (!q) { toast("No question there. Load the pack in Setup."); return; }
+  resultsOpen = false;
+  const pub = { media: q.media ? mediaKey(q.media) : null, mediaKind: q.media ? (AUDIO_EXT.test(q.media) ? "audio" : "image") : null, hint: round(r).scoring === "wager" ? q.hint || null : null };
+  await w(() => patch(`${ROOT}/q/${r}/${n}`, pub));
+  await setState({ round: r, q: n, phase: "qprep", startAt: null, closeAt: null, nq: nqAll() });
+  sel = { r, n }; followLive = true;
+}
+async function startQuestion(r, n) {
+  const q = key(r, n); if (!q) return;
+  const R = round(r), s = S(), teams = playingTeams(D.config);
+  const limit = limitFor(r, q);
+  if (!s.tokenLock?.[r]) await w(() => patch(`${ROOT}/state/tokenLock`, { [r]: true }));
+  if (R.scoring === "wager") { // anyone who didn't lock a weight gets their smallest unused one
+    const all = D.wagers?.[r] || {};
+    const writes = {};
+    for (const t of teams) {
+      if (all[n]?.[t]) continue;
+      const used = new Set(Object.entries(all).filter(([qn]) => qn !== String(n)).map(([, x]) => Number(x?.[t]?.w)).filter(Boolean));
+      const wgt = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].find(x => !used.has(x));
+      if (wgt) writes[t] = { w: wgt, auto: true, at: SERVER_TS };
+    }
+    if (Object.keys(writes).length) await w(() => patch(`${ROOT}/wagers/${r}/${n}`, writes));
+  }
+  const startAt = Math.round(now()), closeAt = startAt + limit * 1000;
+  const pub = {
+    type: q.type, text: q.question || "", limit, startAt, closeAt,
+    options: q.type === "mc" ? [q.a, q.b, q.c, q.d].map(x => x || "") : null,
+    unit: q.unit || null, min: q.type === "number" ? Number(q.min || 0) : null, max: q.type === "number" ? Number(q.max || 100) : null, step: q.type === "number" ? Number(q.step || 1) : null,
+    media: q.media ? mediaKey(q.media) : null, mediaKind: q.media ? (AUDIO_EXT.test(q.media) ? "audio" : "image") : null,
+    hint: R.scoring === "wager" ? q.hint || null : null,
+  };
+  await w(() => put(`${ROOT}/q/${r}/${n}`, pub));
+  await setState({ round: r, q: n, phase: "open", startAt, closeAt, limit, screen: S().screen === "blank" ? "q" : S().screen || "q" });
+  sel = { r, n }; followLive = true;
+}
+async function closeQuestion() {
+  const s = S(), t = Math.round(now());
+  await w(() => patch(`${ROOT}/q/${s.round}/${s.q}`, { closeAt: t }));
+  await setState({ phase: "closed", closeAt: t });
+}
+async function extend(sec) {
+  const s = S(); const base = Math.max(Number(s.closeAt) || 0, Math.round(now()));
+  const closeAt = base + sec * 1000;
+  await w(() => patch(`${ROOT}/q/${s.round}/${s.q}`, { closeAt }));
+  await setState({ phase: "open", closeAt });
+}
+async function reveal(r, n) {
+  const q = key(r, n); if (!q) return;
+  const text = q.type === "mc" ? `${q.answer}: ${[q.a, q.b, q.c, q.d][LETTERS.indexOf(String(q.answer).toUpperCase())] || ""}` : `${q.answer}${q.unit ? " " + q.unit : ""}`;
+  await w(() => put(`${ROOT}/reveal/${r}/${n}`, { text, letter: q.type === "mc" ? String(q.answer).toUpperCase() : null }));
+  await setState({ phase: "reveal" });
+}
+// auto close when the timer runs out
+setInterval(() => {
+  const s = S();
+  if (s.phase === "open" && s.closeAt && now() >= s.closeAt && !autoClosing) { autoClosing = true; setState({ phase: "closed" }).finally(() => (autoClosing = false)); }
+  tickTimer();
+}, 250);
+let autoClosing = false;
+
+/* ================= scoring ================= */
+function qScores(r, n) {
+  const k = key(r, n); if (!k || !started(r, n)) return null;
+  return scoreQuestion({ roundN: r, key: k, qpub: qpub(r, n), answers: D.answers?.[r]?.[n] || {}, overrides: D.marks?.[r]?.[n] || {}, wagers: D.wagers?.[r]?.[n] || {}, teams: playingTeams(D.config) });
+}
+function roundTotals(r) {
+  const teams = playingTeams(D.config), tot = {}, right = {}; let total = 0;
+  teams.forEach(t => { tot[t] = 0; right[t] = 0; });
+  qs(r).forEach((_, i) => {
+    const sc = qScores(r, i + 1); if (!sc) return; total++;
+    teams.forEach(t => { tot[t] += sc[t].pts; if (sc[t].ok) right[t]++; });
+  });
+  return { tot, right, total };
+}
+function computeResult(r) {
+  const { tot } = roundTotals(r);
+  const rounded = {}; Object.entries(tot).forEach(([t, v]) => (rounded[t] = Math.round(v * 100) / 100));
+  const tokens = {}; Object.keys(rounded).forEach(t => { const k = D.tokens?.[r]?.[t]?.k; if (k) tokens[t] = { k }; });
+  return roundResult(r, rounded, tokens);
+}
+
+/* ================= rendering ================= */
+function paint(el, html) {
+  const ae = document.activeElement;
+  if (ae && el.contains(ae) && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName)) return; // don't wipe what the operator is typing
+  if (el._html !== html) { el._html = html; el.innerHTML = html; }
+}
+function render() {
+  const s = S();
+  $("dot").className = "dot" + (OK ? " live" : "");
+  $("phase").textContent = { lobby: "Lobby", round: "Round intro", qprep: "Question ready", open: "Answers open", closed: "Closed", reveal: "Answer shown", roundEnd: "Round over" }[s.phase || "lobby"] || s.phase;
+  $("phase").className = "pill" + (s.phase === "open" ? " open" : "");
+  $("liveinfo").textContent = s.round ? `Live: Round ${s.round}${s.q ? ` · Q${s.q}` : ""}` : "";
+  document.querySelectorAll("#screenseg button").forEach(b => b.classList.toggle("on", (s.screen || "q") === b.dataset.screen));
+  renderSide();
+  if (tab === "run") { renderControl(); renderTiles(); renderReview(); renderResults(); }
+  if (tab === "scores") renderScores();
+  if (tab === "setup") renderSetup();
+}
+
+function renderSide() {
+  const s = S();
+  paint($("sidebody"), ROUNDS.map(R => {
+    const list = qs(R.n);
+    const lv = list.reduce((a, q) => (a[q.level?.toLowerCase().startsWith("n") ? "n" : q.level?.toLowerCase().startsWith("c") ? "c" : "x"]++, a), { c: 0, n: 0, x: 0 });
+    return `<div class="rnd"><button data-selr="${R.n}" class="${sel.r === R.n ? "sel" : ""}"><span>${R.n}. ${esc(R.name)}</span><span class="lvl">${list.length} Q${lv.c + lv.n ? ` · ${lv.c} common / ${lv.n} niche` : ""}</span></button>
+      <ul class="qs">${list.map((q, i) => { const n = i + 1, isLive = Number(s.round) === R.n && Number(s.q) === n; return `<li><button data-selq="${R.n}.${n}" class="${sel.r === R.n && sel.n === n ? "sel" : ""} ${isLive ? "live" : ""}"><span class="n">Q${n}</span><span class="t">${esc(q.question || "(no text)")}</span><span class="st">${isLive ? "●" : started(R.n, n) ? "✓" : ""}</span></button></li>`; }).join("")}</ul></div>`;
+  }).join("") || "");
+}
+
+function nextAction() {
+  const s = S(), r = Number(s.round) || 0, n = Number(s.q) || 0;
+  if (!r || s.phase === "lobby") return { label: "Start round 1", run: () => prepRound(1) };
+  if (s.phase === "round") return qs(r).length ? { label: `Ready question 1`, run: () => prepQuestion(r, 1) } : { label: "Load the pack first", run: () => switchTab("setup") };
+  if (s.phase === "qprep") return { label: `Start question ${n}`, run: () => startQuestion(r, n) };
+  if (s.phase === "open") return { label: "Close answers now", run: closeQuestion };
+  if (s.phase === "closed" || s.phase === "reveal") {
+    if (n < qs(r).length) return { label: `Ready question ${n + 1}`, run: () => prepQuestion(r, n + 1) };
+    return { label: `End round ${r}`, run: () => { resultsOpen = true; render(); $("results").scrollIntoView({ behavior: "smooth" }); } };
+  }
+  if (s.phase === "roundEnd") return r < 6 ? { label: `Start round ${r + 1}`, run: () => prepRound(r + 1) } : { label: "Night over: show scores", run: () => switchTab("scores") };
+  return { label: "Next", run: () => {} };
+}
+
+function renderControl() {
+  const s = S(), R = round(sel.r), q = key(sel.r, sel.n), isLive = Number(s.round) === sel.r && Number(s.q) === sel.n;
+  const nx = nextAction();
+  let preview = `<p class="muted">No question ${sel.n} in round ${sel.r}. Load your question pack in Setup.</p>`;
+  if (q) {
+    const opts = q.type === "mc" ? `<div class="row">${LETTERS.map((L, i) => `<span class="opt ${String(q.answer).toUpperCase() === L ? "key" : ""}">${L}: ${esc([q.a, q.b, q.c, q.d][i] || "")}</span>`).join("")}</div>` : "";
+    const mk = q.media ? mediaKey(q.media) : "";
+    const mstate = !q.media ? "" : mediaKeys === null ? "" : mediaKeys.has(mk) ? `<span class="good">uploaded</span>` : `<span class="bad">not uploaded</span>`;
+    preview = `<div class="preview"><div class="qt">${esc(q.question || "(no question text)")}</div>${opts}
+      <div class="kv"><span><b>Type</b>${{ mc: "Multiple choice", text: "Typed", number: "Number" }[q.type] || q.type}</span>
+      ${q.type !== "mc" ? `<span><b>Answer</b>${esc(q.answer)}${q.unit ? " " + esc(q.unit) : ""}</span>` : ""}
+      ${q.alts?.length ? `<span><b>Also accept</b>${esc(q.alts.join(", "))}</span>` : ""}
+      ${q.type === "number" ? `<span><b>Slider</b>${esc(q.min || 0)} to ${esc(q.max || 100)}</span>` : ""}
+      ${q.hint ? `<span><b>Hint</b>${esc(q.hint)}</span>` : ""}
+      ${q.media ? `<span><b>Media</b>${esc(q.media)} ${mstate}</span>` : ""}
+      ${q.level ? `<span><b>Level</b>${esc(q.level)}</span>` : ""}</div></div>`;
+  }
+  const isAudioLive = qpub(s.round, s.q).mediaKind === "audio";
+  paint($("control"), `<div class="row" style="justify-content:space-between"><h2>Round ${sel.r}: ${esc(R.name)} · Question ${sel.n}${qs(sel.r).length ? ` of ${qs(sel.r).length}` : ""} ${isLive ? `<span class="pill open" style="vertical-align:middle">live</span>` : ""}</h2>
+      <span class="disp" style="font-size:34px" id="timerbig"></span></div>
+    ${preview}
+    <div class="row ctl" style="margin-top:6px">
+      <button class="btn primary next" id="next">${esc(nx.label)} →</button>
+      <span class="muted" style="margin:0 6px">or for the selected question:</span>
+      <button class="btn" id="prepround">Start round ${sel.r}</button>
+      <button class="btn" id="prepq" ${q ? "" : "disabled"}>Ready Q${sel.n}</button>
+      <button class="btn" id="startq" ${q ? "" : "disabled"}>Open Q${sel.n}</button>
+      <label class="muted">Timer <input type="number" id="limit" class="small" min="5" max="${R.timed ? 120 : 60}" value="${esc(q?.timer || R.limit)}"> s</label>
+    </div>
+    <div class="row ctl" style="margin-top:8px">
+      <button class="btn" id="closeq" ${s.phase === "open" ? "" : "disabled"}>Close answers</button>
+      <button class="btn" id="plus15" ${s.phase === "open" || s.phase === "closed" ? "" : "disabled"}>+15 s</button>
+      <button class="btn" id="replay" ${isAudioLive && (s.phase === "open" || s.phase === "closed") ? "" : "disabled"}>Replay music</button>
+      <button class="btn" id="revealq" ${s.round && s.q && started(s.round, s.q) && s.phase !== "open" ? "" : "disabled"}>Show answer on big screen</button>
+      <button class="btn" id="endround" ${s.round ? "" : "disabled"}>End round ${s.round || ""}</button>
+      ${!followLive ? `<button class="btn" id="golive">Back to live question</button>` : ""}
+    </div>`);
+  tickTimer();
+}
+function tickTimer() {
+  const el = $("timerbig"); if (!el) return;
+  const s = S();
+  if (s.phase === "open" && s.closeAt) { const left = Math.max(0, s.closeAt - now()); el.textContent = Math.ceil(left / 1000) + " s"; el.className = "disp" + (left < 5000 ? " bad" : ""); }
+  else el.textContent = "";
+}
+
+function renderTiles() {
+  const s = S(), r = Number(s.round), n = Number(s.q), teams = playingTeams(D.config);
+  if (!r) { $("tilehead").textContent = "Teams"; $("tilenote").textContent = "Waiting to start"; paint($("tiles"), teams.map(t => `<div class="tile"><div class="tn">${esc(teamName(D.config, t))}</div></div>`).join("")); return; }
+  const R = round(r);
+  if (s.phase === "round" || (s.phase === "qprep" && !n) || s.phase === "roundEnd") {
+    $("tilehead").textContent = `Prats tokens · Round ${r}`;
+    $("tilenote").textContent = s.tokenLock?.[r] ? "Locked" : `${teams.filter(t => D.tokens?.[r]?.[t]).length} of ${teams.length} decided`;
+    paint($("tiles"), teams.map(t => { const k = D.tokens?.[r]?.[t]; return `<div class="tile ${k ? "ok" : ""}"><div class="tn">${esc(teamName(D.config, t))}</div><div>${k ? (Number(k.k) ? `${TOKENS[k.k].name}` : "No token") : `<span class="muted">${s.tokenLock?.[r] ? "No token" : "Deciding…"}</span>`}</div></div>`; }).join(""));
+    return;
+  }
+  if (s.phase === "qprep") {
+    if (R.scoring === "wager") {
+      $("tilehead").textContent = `Weights · Q${n}`; $("tilenote").textContent = `${teams.filter(t => D.wagers?.[r]?.[n]?.[t]).length} of ${teams.length} locked`;
+      paint($("tiles"), teams.map(t => { const x = D.wagers?.[r]?.[n]?.[t]; return `<div class="tile ${x ? "ok" : ""}"><div class="tn">${esc(teamName(D.config, t))}<span>${x ? esc(x.w) : ""}</span></div><div class="muted">${x ? "Locked" : "Choosing…"}</div></div>`; }).join(""));
+    } else {
+      $("tilehead").textContent = `Q${n} ready`; $("tilenote").textContent = "Press Start when you're ready";
+      paint($("tiles"), teams.map(t => `<div class="tile"><div class="tn">${esc(teamName(D.config, t))}</div><div class="muted">${D.tokens?.[r]?.[t]?.k ? TOKENS[D.tokens[r][t].k].name : ""}</div></div>`).join(""));
+    }
+    return;
+  }
+  // open / closed / reveal: answers
+  const k = key(r, n), sc = qScores(r, n) || {}, ans = D.answers?.[r]?.[n] || {}, ov = D.marks?.[r]?.[n] || {}, pub = qpub(r, n);
+  $("tilehead").textContent = `Answers · Q${n}`;
+  $("tilenote").textContent = `${teams.filter(t => ans[t]).length} of ${teams.length} answered`;
+  paint($("tiles"), teams.map(t => {
+    const a = ans[t], o = ov[t];
+    const secs = a && pub.startAt ? ((effTime(a) - pub.startAt) / 1000).toFixed(1) + " s" : "";
+    if (!k) return `<div class="tile"><div class="tn">${esc(teamName(D.config, t))}</div><div class="muted">${a ? "Answered" : "—"}</div></div>`;
+    const am = a ? autoMark(k, a.v) : { ok: false, flag: null };
+    let cls = "", line = "";
+    if (R.scoring === "closest") { line = a ? `${fmtScore(r, sc[t]?.err ?? 100)} off` : "No answer · 100%"; cls = a ? "ok" : ""; }
+    else {
+      const ok = sc[t]?.ok;
+      cls = !a && o === undefined ? "" : ok ? "ok" : "no";
+      if (a && am.flag && o === undefined) cls = "iffy";
+      line = !a ? (o === true ? "No answer · marked right" : "No answer") : `${ok ? "Right" : "Wrong"}${o !== undefined ? " (set by you)" : ""} · ${secs}`;
+      if (R.scoring !== "count" && ok) line += ` · ${sc[t].pts} pts`;
+    }
+    const iffy = a && am.flag && R.scoring !== "closest" ? `<div class="iffytext"><span class="warn">${am.flag === "close" ? "Typo?" : "Check:"}</span> “${esc(a.v)}”</div>` : "";
+    const acts = R.scoring === "closest" ? `<button data-edit="${t}">Edit</button>${a ? `<button data-clear="${t}">Clear</button>` : ""}`
+      : `<button data-mark="${t}" data-v="1" class="${o === true ? "on" : ""}">✓</button><button data-mark="${t}" data-v="0" class="${o === false ? "on" : ""}">✗</button>${o !== undefined ? `<button data-mark="${t}" data-v="">Auto</button>` : ""}<button data-edit="${t}">Edit</button>${a ? `<button data-clear="${t}">Clear</button>` : ""}`;
+    return `<div class="tile ${cls}"><div class="tn">${esc(teamName(D.config, t))}${R.scoring === "wager" && D.wagers?.[r]?.[n]?.[t] ? `<span title="weight">w${esc(D.wagers[r][n][t].w)}</span>` : ""}</div><div>${line}</div>${iffy}<div class="acts">${acts}</div></div>`;
+  }).join(""));
+}
+
+function renderReview() {
+  const r = sel.r, R = round(r), teams = playingTeams(D.config), list = qs(r);
+  if (!list.length) { paint($("review"), `<h2>Round ${r} review</h2><p class="muted">No questions loaded for this round.</p>`); return; }
+  const { tot, right, total } = roundTotals(r);
+  const head = list.map((_, i) => `<th>Q${i + 1}${R.scoring === "wager" ? "" : ""}</th>`).join("");
+  const rows = teams.map(t => {
+    const tk = D.tokens?.[r]?.[t];
+    const cells = list.map((_, i) => {
+      const n = i + 1, sc = qScores(r, n); if (!sc) return `<td class="muted">·</td>`;
+      const a = D.answers?.[r]?.[n]?.[t], o = D.marks?.[r]?.[n]?.[t];
+      const wg = R.scoring === "wager" ? `<input type="number" class="small" style="width:46px" min="1" max="10" data-wager="${n}.${t}" value="${esc(D.wagers?.[r]?.[n]?.[t]?.w ?? "")}">` : "";
+      if (R.scoring === "closest") return `<td>${a ? fmtScore(r, sc[t].err) : "—"}</td>`;
+      const am = a ? autoMark(key(r, n), a.v) : null;
+      const sym = sc[t].ok ? "✓" : a ? "✗" : "—";
+      return `<td class="c ${o !== undefined ? "ovr" : ""}" data-cell="${n}.${t}" title="${a && am?.flag ? esc("“" + a.v + "”") : ""}">${sym}${am?.flag && o === undefined ? `<span class="warn">?</span>` : ""}${R.scoring === "fastest5" || R.scoring === "speed" ? `<div class="muted" style="font-size:11px">${sc[t].pts || ""}</div>` : ""}${wg}</td>`;
+    }).join("");
+    const tokSel = `<select data-token="${t}"><option value="">${D.state?.tokenLock?.[r] ? "none" : "…"}</option>${[0, 1, 2, 3].map(k => `<option value="${k}" ${tk && Number(tk.k) === k ? "selected" : ""}>${k ? TOKENS[k].name : "No token"}</option>`).join("")}</select>`;
+    return `<tr><td class="t">${esc(teamName(D.config, t))}</td>${cells}<td><b>${fmtScore(r, tot[t])}</b></td><td>${R.scoring === "closest" ? "" : right[t]}</td><td>${tokSel}</td></tr>`;
+  }).join("");
+  paint($("review"), `<div class="row" style="justify-content:space-between"><h2>Round ${r} review: ${esc(R.name)}</h2><span class="muted">Click a cell to flip right/wrong. Dotted = set by you. <span class="warn">?</span> = typed answer worth a look (hover to see it).</span></div>
+    <div class="wrapx"><table class="grid"><thead><tr><th>Team</th>${head}<th>${R.scoring === "closest" ? "Total error" : "Score"}</th><th>${R.scoring === "closest" ? "" : "Right"}</th><th>Prats token</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="muted" style="margin:8px 0 0">${total} of ${list.length} questions played.</p>`);
+}
+
+function renderResults() {
+  const s = S(), r = Number(s.round) || sel.r, R = round(r);
+  const show = resultsOpen || s.phase === "roundEnd";
+  $("results").hidden = !show;
+  if (!show) return;
+  const rows = computeResult(r), pub = D.results?.[r];
+  const ov = resultOverride[r] || {};
+  const order = Object.keys(rows).sort((a, b) => rows[a].place - rows[b].place || a - b);
+  paint($("results"), `<div class="row" style="justify-content:space-between"><h2>Round ${r} results</h2>${pub?.published ? `<span class="good">Published${pub.at ? "" : ""}</span>` : `<span class="warn">Not published yet</span>`}</div>
+    <p class="muted" style="margin:0 0 8px">Check this, then publish. Teams then see only their own right count and round score. Type in “Final” to override a team's Eco points.</p>
+    <div class="wrapx"><table class="grid"><thead><tr><th>Place</th><th>Team</th><th>${R.scoring === "closest" ? "Total error" : "Round score"}</th><th>Eco points</th><th>Token</th><th>After token</th><th>Final</th></tr></thead><tbody>
+    ${order.map(t => { const x = rows[t]; return `<tr><td>${x.place}</td><td class="t">${esc(teamName(D.config, t))}</td><td>${fmtScore(r, x.score)}</td><td>${x.base}</td><td>${x.token ? TOKENS[x.token].name : ""}</td><td>${x.final}</td><td><input type="number" class="small" data-final="${t}" placeholder="${x.final}" value="${ov[t] ?? ""}"></td></tr>`; }).join("")}
+    </tbody></table></div>
+    <div class="row" style="margin-top:10px"><button class="btn primary" id="publish">${pub?.published ? "Publish again" : "Publish round " + r}</button><button class="btn" id="closeresults">Hide</button></div>`);
+}
+
+function nightTable() {
+  const teams = playingTeams(D.config);
+  const val = (t, r) => (D.results?.[r]?.published ? D.results[r].rows?.[t] : null);
+  return teams.map(t => ({ t, per: ROUNDS.map(R => val(t, R.n)), total: ROUNDS.reduce((a, R) => a + (Number(val(t, R.n)?.final) || 0), 0) }));
+}
+function renderScores() {
+  const s = S(), sort = scoreSort;
+  const rows = nightTable().sort((a, b) => (sort === "total" ? b.total - a.total : (Number(b.per[sort - 1]?.final ?? -999) - Number(a.per[sort - 1]?.final ?? -999))) || a.t - b.t);
+  paint($("scores"), `<div class="row" style="justify-content:space-between"><h2>Night scores (Eco points)</h2>
+      <div class="row"><label>Sort by <select id="sortsel"><option value="total" ${sort === "total" ? "selected" : ""}>Night total</option>${ROUNDS.map(R => `<option value="${R.n}" ${sort === R.n ? "selected" : ""}>Round ${R.n}: ${esc(R.name)}</option>`).join("")}</select></label>
+      <button class="btn" id="showscores">Show on big screen…</button>${(s.screen || "q") !== "q" ? `<button class="btn" id="backq">Big screen back to questions</button>` : ""}<button class="btn" id="copycsv">Copy as spreadsheet</button></div></div>
+    <div class="wrapx" style="margin-top:10px"><table class="grid"><thead><tr><th>Team</th>${ROUNDS.map(R => `<th>R${R.n} ${esc(R.name)}</th>`).join("")}<th>Total</th></tr></thead><tbody>
+    ${rows.map(x => `<tr><td class="t">${esc(teamName(D.config, x.t))}</td>${x.per.map(v => `<td>${v ? `${v.final}${v.token ? ` <span class="warn" style="font-size:12px">T${v.token}</span>` : ""}` : "–"}</td>`).join("")}<td><b>${x.total}</b></td></tr>`).join("")}</tbody></table></div>
+    <p class="muted">Only published rounds count. T1/T2/T3 = Prats token played.</p>`);
+}
+let scoreSort = "total";
+
+/* ---------- setup ---------- */
+function renderSetup() {
+  const counts = ROUNDS.map(R => `${R.n}. ${esc(R.name)}: <b>${qs(R.n).length}</b>`).join(" · ");
+  const issues = packIssues();
+  paint($("packcard"), `<h2>Question pack</h2>
+    <p class="muted" style="margin:0 0 8px">One row per question. Columns: <code>round, type, question, a, b, c, d, answer, alternatives, unit, min, max, step, timer, hint, media, level</code>. Type is mc, text or number. For mc the answer is A, B, C or D. Alternatives are separated by |. <a href="sample-pack.csv" download>Download a sample</a>.</p>
+    <div class="row"><input type="file" id="packfile" accept=".csv,.tsv,text/csv,text/plain"><button class="btn" id="pastebtn">Paste from a spreadsheet</button></div>
+    <textarea id="pastebox" rows="6" style="width:100%;margin-top:8px" placeholder="Copy the whole sheet (with the header row) and paste here" hidden></textarea>
+    <button class="btn primary" id="pasteload" style="margin-top:6px" hidden>Load pasted questions</button>
+    <p style="margin:10px 0 4px">${PACK.name ? `Loaded <b>${esc(PACK.name)}</b>${PACK.loadedAt ? ` (${new Date(PACK.loadedAt).toLocaleString()})` : ""}` : "<span class='warn'>No pack loaded yet</span>"}</p>
+    <p class="muted" style="margin:0">${counts}</p>
+    ${issues.length ? `<div class="warn" style="margin-top:8px">Check these:<ul style="margin:4px 0 0">${issues.slice(0, 15).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : PACK.name ? `<p class="good" style="margin-top:8px">Pack looks good.</p>` : ""}
+    <p class="muted" style="font-size:13px">The pack, with its answers, stays in this browser only. Questions go to the players' pages when you open them, and answers never do.</p>`);
+  const needed = [...new Set(ROUNDS.flatMap(R => qs(R.n).map(q => q.media).filter(Boolean)))];
+  paint($("mediacard"), `<h2>Pictures and music</h2>
+    <p class="muted" style="margin:0 0 8px">Upload the files named in the pack's media column. They're stored online so the question screen can run on any computer. Music clips must be under 30 seconds (the screen plays each twice).</p>
+    <div class="row"><input type="file" id="mediafile" multiple accept="image/*,audio/*"><button class="btn" id="mediarefresh">Refresh list</button></div>
+    <p id="mediaprog" class="muted" style="margin:6px 0"></p>
+    ${needed.length ? `<p style="margin:6px 0">Pack needs ${needed.length} file${needed.length > 1 ? "s" : ""}: ${needed.map(m => mediaKeys && mediaKeys.has(mediaKey(m)) ? `<span class="good">${esc(m)}</span>` : `<span class="bad">${esc(m)}</span>`).join(", ")}</p>` : ""}
+    <div class="medialist">${mediaKeys === null ? "<span class='muted'>Loading…</span>" : [...mediaKeys].sort().map(k => `<div><span>${esc(k)}</span><button class="btn" style="padding:2px 8px" data-delmedia="${esc(k)}">Delete</button></div>`).join("") || "<span class='muted'>Nothing uploaded yet</span>"}</div>`);
+  paint($("teamscard"), `<h2>Teams</h2><p class="muted" style="margin:0 0 8px">Untick teams that aren't here tonight, so they're left out of rankings and the bottom 2.</p>
+    <table class="grid"><thead><tr><th>Playing</th><th>Team</th><th>Display name</th></tr></thead><tbody>
+    ${TEAMS.map(t => `<tr><td><input type="checkbox" data-playing="${t}" ${D.config?.teams?.[t]?.playing === false ? "" : "checked"}></td><td>${t}</td><td><input type="text" data-tname="${t}" placeholder="Team ${t}" value="${esc(D.config?.teams?.[t]?.name || "")}"></td></tr>`).join("")}</tbody></table>`);
+  const hub = "https://shoeyoung25.github.io/eco-cup-live/trivia/";
+  paint($("nightcard"), `<h2>Links and the night</h2>
+    <p style="margin:0 0 6px">Players (the QR code on the big screen goes here): <a href="${hub}" target="_blank" rel="noopener">${hub}</a></p>
+    <p style="margin:0 0 12px">Question screen for the projector: <a href="${hub}screen/" target="_blank" rel="noopener">${hub}screen/</a></p>
+    <div class="row"><button class="btn" id="tolobby">Back to the lobby screen</button><button class="btn danger" id="reset">Reset the night…</button></div>
+    <p class="muted" style="font-size:13px">Reset saves a copy of tonight's data, then clears every answer, token, weight and result so you can start over (for example after a rehearsal). Team names and the pack stay.</p>
+    <p class="muted" style="font-size:13px">Clock: ${(() => { const c = clockInfo(); return isFinite(c.rtt) ? `synced, ${Math.round(c.rtt)} ms round trip` : "syncing…"; })()}</p>`);
+}
+function packIssues() {
+  const out = [];
+  ROUNDS.forEach(R => qs(R.n).forEach((q, i) => {
+    const where = `R${R.n} Q${i + 1}`;
+    if (!["mc", "text", "number"].includes(q.type)) out.push(`${where}: type must be mc, text or number`);
+    if (q.type === "mc" && !LETTERS.includes(String(q.answer).toUpperCase())) out.push(`${where}: answer must be A, B, C or D`);
+    if (q.type === "mc" && [q.a, q.b, q.c, q.d].some(x => !x)) out.push(`${where}: needs all 4 options`);
+    if (q.type === "number" && !isFinite(Number(q.answer))) out.push(`${where}: answer must be a number`);
+    if (q.type === "number" && Number(q.answer) === 0) out.push(`${where}: % error doesn't work when the answer is 0`);
+    if (R.scoring === "closest" && q.type !== "number") out.push(`${where}: Closest Wins questions should be type number`);
+    if (q.type !== "mc" && !String(q.answer ?? "").trim()) out.push(`${where}: no answer`);
+    if (!R.timed && Number(q.timer) > 60) out.push(`${where}: timer over 60 s, it will be cut to 60`);
+    if (q.media && mediaKeys && !mediaKeys.has(mediaKey(q.media))) out.push(`${where}: media “${q.media}” not uploaded`);
+  }));
+  if (qs(4).length > 10) out.push("Wager round has more than 10 questions, but there are only 10 weights");
+  return out;
+}
+
+/* ---------- pack parsing ---------- */
+function parseTable(text) {
+  const delim = text.split("\n")[0].includes("\t") ? "\t" : ",";
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; continue; }
+    if (c === '"' && cell === "") { q = true; continue; }
+    if (c === delim) { row.push(cell); cell = ""; continue; }
+    if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; continue; }
+    cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows.filter(r => r.some(x => String(x).trim() !== ""));
+}
+function loadPackText(text, name) {
+  const rows = parseTable(text.replace(/^﻿/, ""));
+  if (rows.length < 2) { toast("No questions found. Include the header row."); return; }
+  const head = rows[0].map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
+  const col = n => head.indexOf(n);
+  const alias = { question: ["question", "q", "text"], answer: ["answer", "key"], alternatives: ["alternatives", "alts", "alsoaccept", "accept"], round: ["round", "r"], type: ["type"], level: ["level", "difficulty", "commonniche"] };
+  const find = n => { for (const a of alias[n] || [n]) { const i = col(a); if (i >= 0) return i; } return -1; };
+  const get = (r, n) => { const i = find(n); return i >= 0 ? String(r[i] ?? "").trim() : ""; };
+  if (find("round") < 0 || find("question") < 0) { toast("The header needs at least round and question columns."); return; }
+  const rounds = {};
+  for (const r of rows.slice(1)) {
+    const rn = parseInt(get(r, "round"), 10); if (!(rn >= 1 && rn <= 6)) continue;
+    let type = get(r, "type").toLowerCase();
+    type = type.startsWith("m") ? "mc" : type.startsWith("n") ? "number" : type ? "text" : (rn === 5 ? "number" : "text");
+    const q = { type, question: get(r, "question"), a: get(r, "a"), b: get(r, "b"), c: get(r, "c"), d: get(r, "d"), answer: get(r, "answer"), alts: get(r, "alternatives").split("|").map(x => x.trim()).filter(Boolean), unit: get(r, "unit"), min: get(r, "min"), max: get(r, "max"), step: get(r, "step"), timer: get(r, "timer"), hint: get(r, "hint"), media: get(r, "media"), level: get(r, "level") };
+    if (type === "mc") q.answer = q.answer.toUpperCase();
+    (rounds[rn] = rounds[rn] || []).push(q);
+  }
+  PACK = { name, loadedAt: Date.now(), rounds }; savePack();
+  toast(`Loaded ${Object.values(rounds).reduce((a, x) => a + x.length, 0)} questions`);
+  setState({ nq: nqAll() });
+  render();
+}
+
+/* ---------- media upload ---------- */
+async function listMedia() {
+  try {
+    const r = await fetch(`${DB_URL}${MEDIA}.json?shallow=true`, { cache: "no-store" });
+    const j = await r.json(); mediaKeys = new Set(Object.keys(j || {}));
+  } catch (e) { mediaKeys = mediaKeys || new Set(); }
+  render();
+}
+function readAsDataURL(file) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); }); }
+async function shrinkImage(file) {
+  if (file.size < 350 * 1024 || /svg|gif/.test(file.type)) return readAsDataURL(file);
+  const url = URL.createObjectURL(file);
+  const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+  const scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+  const c = document.createElement("canvas"); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(url);
+  return c.toDataURL("image/jpeg", 0.85);
+}
+function audioDuration(dataUrl) { return new Promise(res => { const a = new Audio(); a.onloadedmetadata = () => res(a.duration); a.onerror = () => res(NaN); a.src = dataUrl; }); }
+async function uploadMedia(files) {
+  const prog = $("mediaprog"); let done = 0;
+  for (const f of files) {
+    prog.textContent = `Uploading ${f.name} (${done + 1} of ${files.length})…`;
+    try {
+      const isAudio = f.type.startsWith("audio") || AUDIO_EXT.test(f.name);
+      const data = isAudio ? await readAsDataURL(f) : await shrinkImage(f);
+      if (data.length > 9.5e6) { toast(`${f.name} is too big (over about 7 MB). Trim or compress it.`, 5000); continue; }
+      let dur = null;
+      if (isAudio) { dur = await audioDuration(data); if (dur > 30.5) toast(`${f.name} is ${Math.round(dur)} s long. Clips should be under 30 s so they can play twice.`, 6000); }
+      await put(`${MEDIA}/${mediaKey(f.name)}`, { name: f.name, type: isAudio ? (f.type || "audio/mpeg") : (data.slice(5, data.indexOf(";")) || f.type), data, dur, at: SERVER_TS });
+      done++;
+    } catch (e) { toast(`Couldn't upload ${f.name}: ${e.message || e}`, 5000); }
+  }
+  prog.textContent = `Uploaded ${done} of ${files.length}.`;
+  listMedia();
+}
+
+/* ================= dialogs ================= */
+function ask(title, bodyHTML, okLabel = "OK") {
+  return new Promise(res => {
+    const d = $("dlg"); $("dlgtitle").textContent = title; $("dlgbody").innerHTML = bodyHTML; $("dlgok").textContent = okLabel;
+    d.returnValue = ""; d.onclose = () => res(d.returnValue === "ok" ? d : null); d.showModal();
+    const first = d.querySelector("#dlgbody input"); if (first) first.focus();
+  });
+}
+
+/* ================= events ================= */
+function switchTab(t) {
+  tab = t; document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t));
+  ["run", "scores", "setup"].forEach(x => ($("tab-" + x).hidden = x !== t));
+  if (t === "setup" && mediaKeys === null) listMedia();
+  render();
+}
+$("tabs").onclick = e => { const b = e.target.closest("[data-tab]"); if (b) switchTab(b.dataset.tab); };
+$("sidetoggle").onclick = () => { $("side").classList.toggle("collapsed"); $("sidetoggle").textContent = $("side").classList.contains("collapsed") ? "›" : "‹"; try { localStorage.setItem("trivia-side", $("side").classList.contains("collapsed") ? "1" : ""); } catch (e) {} };
+try { if (localStorage.getItem("trivia-side")) { $("side").classList.add("collapsed"); $("sidetoggle").textContent = "›"; } } catch (e) {}
+$("sidebody").onclick = e => {
+  const r = e.target.closest("[data-selr]"), q = e.target.closest("[data-selq]");
+  if (q) { const [a, b] = q.dataset.selq.split(".").map(Number); sel = { r: a, n: b }; }
+  else if (r) { sel = { r: Number(r.dataset.selr), n: 1 }; }
+  else return;
+  const s = S(); followLive = Number(s.round) === sel.r && Number(s.q) === sel.n;
+  render();
+};
+$("screenseg").onclick = async e => {
+  const b = e.target.closest("[data-screen]"); if (!b) return;
+  const v = b.dataset.screen;
+  if (v === "scores" && !(await ask("Show scores on the big screen?", "<p>Everyone in the room will see every team's scores.</p>", "Show scores"))) return;
+  setState({ screen: v, sort: scoreSort });
+};
+$("main").addEventListener("click", async e => {
+  const t = e.target, s = S();
+  const id = t.closest("button")?.id;
+  if (id === "next") { const b = t.closest("button"); b.disabled = true; await nextAction().run(); b.disabled = false; return; }
+  if (id === "prepround") return prepRound(sel.r);
+  if (id === "prepq") return prepQuestion(sel.r, sel.n);
+  if (id === "startq") {
+    if (s.phase === "open" && !(Number(s.round) === sel.r && Number(s.q) === sel.n) && !(await ask("Another question is open", `<p>Question ${s.q} of round ${s.round} is still open. Open this one anyway? The other one stops taking answers.</p>`, "Open it"))) return;
+    if (started(sel.r, sel.n) && !(await ask("Open this question again?", "<p>It was already played. Opening it again restarts its timer. Answers already given stay locked.</p>", "Open again"))) return;
+    return startQuestion(sel.r, sel.n);
+  }
+  if (id === "closeq") return closeQuestion();
+  if (id === "plus15") return extend(15);
+  if (id === "replay") return setState({ replay: (Number(s.replay) || 0) + 1 });
+  if (id === "revealq") return reveal(s.round, s.q);
+  if (id === "endround") { resultsOpen = true; render(); $("results").scrollIntoView({ behavior: "smooth" }); return; }
+  if (id === "golive") { followLive = true; syncSel(); render(); return; }
+  if (id === "closeresults") { resultsOpen = false; render(); return; }
+  if (id === "publish") return publish(Number(s.round) || sel.r);
+  if (id === "showscores") { if (await ask("Show scores on the big screen?", "<p>Everyone in the room will see every team's scores, sorted the way you picked.</p>", "Show scores")) setState({ screen: "scores", sort: scoreSort }); return; }
+  if (id === "backq") return setState({ screen: "q" });
+  if (id === "copycsv") return copyCSV();
+  if (id === "pastebtn") { $("pastebox").hidden = false; $("pasteload").hidden = false; $("pastebox").focus(); return; }
+  if (id === "pasteload") return loadPackText($("pastebox").value, "Pasted questions");
+  if (id === "mediarefresh") return listMedia();
+  if (id === "tolobby") { if (await ask("Go back to the lobby?", "<p>The big screen and every phone go back to the join screen. No data is lost.</p>", "Go to lobby")) setState({ phase: "lobby", round: 0, q: 0, screen: "q" }); return; }
+  if (id === "reset") return resetNight();
+  const del_ = t.closest("[data-delmedia]");
+  if (del_) { if (await ask("Delete this file?", `<p>${esc(del_.dataset.delmedia)}</p>`, "Delete")) { await w(() => del(`${MEDIA}/${del_.dataset.delmedia}`)); listMedia(); } return; }
+  // answer tiles
+  const r = Number(s.round), n = Number(s.q);
+  const mk = t.closest("[data-mark]");
+  if (mk) { const team = mk.dataset.mark, v = mk.dataset.v; await w(() => (v === "" ? del(`${ROOT}/marks/${r}/${n}/${team}`) : put(`${ROOT}/marks/${r}/${n}/${team}`, v === "1"))); return; }
+  const ed = t.closest("[data-edit]");
+  if (ed) {
+    const team = ed.dataset.edit, cur = D.answers?.[r]?.[n]?.[team];
+    const d = await ask(`Change ${teamName(D.config, team)}'s answer`, `<p class="muted">Question ${n}. This replaces what they submitted.</p><input type="text" id="editval" style="width:100%" value="${esc(cur?.v ?? "")}">`, "Save");
+    if (!d) return;
+    const raw = d.querySelector("#editval").value.trim(); if (!raw) return;
+    const v = qpub(r, n).type === "number" ? Number(raw) : qpub(r, n).type === "mc" ? raw.toUpperCase().slice(0, 1) : raw;
+    await w(() => put(`${ROOT}/answers/${r}/${n}/${team}`, { v, t: cur?.t ?? Math.round(now()), at: cur?.at ?? Math.round(now()), byOperator: true }));
+    return;
+  }
+  const cl = t.closest("[data-clear]");
+  if (cl) { if (await ask(`Clear ${teamName(D.config, cl.dataset.clear)}'s answer?`, "<p>Their answer is removed. If answers are still open they can answer again.</p>", "Clear")) await w(() => del(`${ROOT}/answers/${r}/${n}/${cl.dataset.clear}`)); return; }
+  // review grid
+  const cell = t.closest("[data-cell]");
+  if (cell && !t.closest("input")) {
+    const [qn, team] = cell.dataset.cell.split("."); const rr = sel.r;
+    const sc = qScores(rr, Number(qn)); const cur = D.marks?.[rr]?.[qn]?.[team];
+    const nextV = cur === undefined ? !sc?.[team]?.ok : cur === !!sc?.[team]?.ok ? !cur : undefined;
+    await w(() => (nextV === undefined ? del(`${ROOT}/marks/${rr}/${qn}/${team}`) : put(`${ROOT}/marks/${rr}/${qn}/${team}`, nextV)));
+  }
+});
+$("main").addEventListener("change", async e => {
+  const t = e.target;
+  if (t.id === "packfile" && t.files[0]) { const f = t.files[0]; loadPackText(await f.text(), f.name); t.value = ""; return; }
+  if (t.id === "mediafile" && t.files.length) { await uploadMedia([...t.files]); t.value = ""; return; }
+  if (t.id === "sortsel") { scoreSort = t.value === "total" ? "total" : Number(t.value); if ((S().screen || "q") === "scores") setState({ sort: scoreSort }); t.blur(); render(); return; }
+  if (t.dataset.playing) { await w(() => put(`${ROOT}/config/teams/${t.dataset.playing}/playing`, t.checked ? null : false)); return; }
+  if (t.dataset.tname !== undefined && t.dataset.tname) { await w(() => put(`${ROOT}/config/teams/${t.dataset.tname}/name`, t.value.trim() || null)); t.blur(); return; }
+  if (t.dataset.token) {
+    const team = t.dataset.token, r = sel.r;
+    if (t.value === "") await w(() => del(`${ROOT}/tokens/${r}/${team}`));
+    else {
+      const k = Number(t.value);
+      if (k && !allowedTokens(tokensPlayedBefore(D.tokens, team, r)).includes(k) && !(await ask("That breaks the token order", `<p>${esc(teamName(D.config, team))} has played ${tokensPlayedBefore(D.tokens, team, r).join(", ") || "nothing"} so far. Set ${TOKENS[k].name} anyway?</p>`, "Set it anyway"))) { render(); return; }
+      await w(() => put(`${ROOT}/tokens/${r}/${team}`, { k, at: SERVER_TS, byOperator: true }));
+    }
+    t.blur(); return;
+  }
+  if (t.dataset.wager) { const [qn, team] = t.dataset.wager.split("."); const v = Number(t.value); await w(() => (v >= 1 && v <= 10 ? put(`${ROOT}/wagers/${sel.r}/${qn}/${team}`, { w: v, at: SERVER_TS, byOperator: true }) : del(`${ROOT}/wagers/${sel.r}/${qn}/${team}`))); t.blur(); return; }
+  if (t.dataset.final !== undefined) { const r = Number(S().round) || sel.r; resultOverride[r] = resultOverride[r] || {}; if (t.value === "") delete resultOverride[r][t.dataset.final]; else resultOverride[r][t.dataset.final] = Number(t.value); return; }
+});
+
+async function publish(r) {
+  const rows = computeResult(r), ov = resultOverride[r] || {};
+  for (const t of Object.keys(rows)) if (ov[t] !== undefined && isFinite(ov[t])) { rows[t].final = ov[t]; rows[t].override = true; }
+  const { right, total } = roundTotals(r);
+  const teamResults = {}; Object.keys(rows).forEach(t => (teamResults[t] = { right: right[t] || 0, total, score: rows[t].score }));
+  const ok = await w(() => put(`${ROOT}/results/${r}`, { published: true, rows, at: SERVER_TS }));
+  if (!ok) return;
+  await w(() => put(`${ROOT}/teamResults/${r}`, teamResults));
+  await setState({ phase: "roundEnd", round: r });
+  toast(`Round ${r} published`);
+}
+async function resetNight() {
+  const d = await ask("Reset the whole night?", `<p>This clears every answer, token, weight and result, and sends everyone back to the lobby. A copy is saved first. Type <b>RESET</b> to confirm.</p><input type="text" id="resetval" style="width:100%">`, "Reset");
+  if (!d || d.querySelector("#resetval").value.trim().toUpperCase() !== "RESET") return;
+  const snap = await get(ROOT).catch(() => null);
+  if (snap) await w(() => put(`/trivia/archive/${Date.now()}`, snap));
+  const config = D.config || null;
+  await w(() => put(ROOT, { config, state: { phase: "lobby", round: 0, q: 0, screen: "q", nq: nqAll() } }));
+  resultOverride = {}; resultsOpen = false; sel = { r: 1, n: 1 }; followLive = true;
+  toast("Night reset");
+}
+function copyCSV() {
+  const rows = nightTable();
+  const lines = [["Team", ...ROUNDS.map(R => `R${R.n} ${R.name}`), "Total"].join("\t"), ...rows.map(x => [teamName(D.config, x.t), ...x.per.map(v => (v ? v.final : "")), x.total].join("\t"))];
+  navigator.clipboard.writeText(lines.join("\n")).then(() => toast("Copied. Paste into a spreadsheet."), () => toast("Couldn't copy"));
+}
+
+setTimeout(() => { if (!PACK.name) toast("Load your question pack in Setup to begin", 4000); }, 800);
+render();
+</script>
+</body>
+</html>

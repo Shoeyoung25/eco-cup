@@ -1,0 +1,15 @@
+round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,media,level
+1,mc,Which planet is the largest in our solar system?,Mars,Jupiter,Saturn,Neptune,B,,,,,,30,,,common
+1,mc,What does EV stand for?,Electric Vehicle,Energy Valve,Engine Voltage,Eco Velocity,A,,,,,,30,,,common
+1,mc,In what year did Illinois become a state?,1776,1818,1848,1865,B,,,,,,30,,,niche
+2,text,Which car brand has a prancing horse logo?,,,,,Ferrari,,,,,,60,,,common
+2,mc,How many sides does a stop sign have?,6 sides,7 sides,8 sides,10 sides,C,,,,,,45,,,common
+3,text,Who sang Bohemian Rhapsody?,,,,,Queen,Freddie Mercury,,,,,60,,,common
+3,mc,Which instrument has 88 keys?,Organ,Piano,Accordion,Harpsichord,B,,,,,,45,,,common
+4,text,What is the capital of Australia?,,,,,Canberra,,,,,,45,Geography,,common
+4,mc,Which element has the symbol W?,Tungsten,Zinc,Tin,Titanium,A,,,,,,45,Science,,niche
+4,text,How many players are on a soccer team on the field?,,,,,11,eleven,,,,,45,Sports,,common
+5,number,How tall is the Eiffel Tower?,,,,,330,,m,0,1000,1,60,,,common
+5,number,In what year was the University of Illinois founded?,,,,,1867,,,1800,2000,1,60,,,niche
+6,mc,What gas do plants take in from the air?,Oxygen,Nitrogen,Carbon dioxide,Helium,C,,,,,,30,,,common
+6,mc,Which company makes the Model 3?,Ford,Tesla,Rivian,Lucid,B,,,,,,30,,,common
