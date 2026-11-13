@@ -19,12 +19,12 @@ round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,med
 2,text,Which country is this landmark in?,,,,,Jordan,,,,,,60,,r2-q8-landmark.jpg,niche
 2,text,Name this scientist.,,,,,Marie Curie,Curie|Marie Sklodowska Curie,,,,,60,,r2-q9-face.jpg,common
 2,text,Which US state is this? (shown upside down),,,,,Tennessee,,,,,,60,,r2-q10-outline.png,niche
-3,text,Name the band.,,,,,a-ha,aha,,,,,60,,r3-q1.mp3,common
-3,mc,Which decade is this song from?,1960s,1970s,1980s,1990s,B,,,,,,60,,r3-q2.mp3,common
-3,text,Name this song.,,,,,Mr. Blue Sky,Mister Blue Sky|Mr Blue Sky,,,,,60,,r3-q3.mp3,common
-3,mc,How many members were in this band's classic Rumours line-up?,3,4,5,6,C,,,,,,60,,r3-q4.mp3,niche
+3,text,Name the band.,,,,,a-ha,aha,,,,,60,,,common
+3,mc,Which decade is this song from?,1960s,1970s,1980s,1990s,B,,,,,,60,,,common
+3,text,Name this song.,,,,,Mr. Blue Sky,Mister Blue Sky|Mr Blue Sky,,,,,60,,,common
+3,mc,How many members were in this band's classic Rumours line-up?,3,4,5,6,C,,,,,,60,,,niche
 3,mc,Who composed this piece?,Vivaldi,Bach,Mozart,Beethoven,A,,,,,,60,,r3-q5.mp3,common
-3,text,Which film was this song written for?,,,,,8 Mile,Eight Mile,,,,,60,,r3-q6.mp3,niche
+3,text,Which film was this song written for?,,,,,8 Mile,Eight Mile,,,,,60,,,niche
 3,mc,Where does this tune come from?,A Russian folk song,Written for the game,A Tchaikovsky ballet,The Soviet anthem,A,,,,,,60,,r3-q7.mp3,niche
 4,text,What is the capital of Australia?,,,,,Canberra,,,,,,45,Geography,,common
 4,mc,Which element has the symbol W?,Tungsten,Zinc,Tin,Titanium,A,,,,,,45,Science,,niche
