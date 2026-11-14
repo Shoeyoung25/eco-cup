@@ -123,14 +123,17 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <script type="module">
 import { ROUNDS, round, TEAMS, LETTERS, TOKENS, teamColor, esc, teamName, playingTeams, arr, autoMark, scoreQuestion, roundResult, effTime, fmtScore, allowedTokens, tokensPlayedBefore } from "./js/core.js";
 import { live, get, put, patch, del, now, syncClock, clockInfo, ROOT, MEDIA, SERVER_TS, DB_URL, $, toast } from "./js/db.js";
-import { fetchDecrypt } from "./js/crypt.js";
 
 /* ================= state ================= */
 let D = {}, OK = false;
 let PACK = loadPack();             // {name, rounds:{1:[q,...]}}
 let sel = { r: 1, n: 1 };          // what the operator is looking at
 let followLive = true;             // selection follows the live question until the operator clicks elsewhere
-let tab = "run", resultsOpen = false, resultOverride = {}, mediaKeys = null;
+let tab = "run", resultsOpen = false, resultOverride = {}, mediaKeys = null, repoKeys = new Set();
+// media files shipped with the site (eco-cup-live/trivia/media/), used when nothing was uploaded under that name
+const REPO_MEDIA = "https://shoeyoung25.github.io/eco-cup-live/trivia/media/";
+const repoMediaUrl = k => { const x = String(k).match(/_([a-z0-9]+)$/); return x ? REPO_MEDIA + k.slice(0, -x[0].length) + "." + x[1] : null; };
+const haveMedia = k => !!mediaKeys && (mediaKeys.has(k) || repoKeys.has(k));
 const db = live((d, ok) => { D = d; OK = ok; if (followLive) syncSel(); render(); });
 syncClock();
 const S = () => D.state || { phase: "lobby" };
@@ -310,7 +313,7 @@ function renderControl() {
   if (q) {
     const opts = q.type === "mc" ? `<div class="row">${LETTERS.map((L, i) => `<span class="opt ${String(q.answer).toUpperCase() === L ? "key" : ""}">${L}: ${esc([q.a, q.b, q.c, q.d][i] || "")}</span>`).join("")}</div>` : "";
     const mk = q.media ? mediaKey(q.media) : "";
-    const mstate = !q.media ? "" : mediaKeys === null ? "" : mediaKeys.has(mk) ? `<span class="good">uploaded</span>` : `<span class="bad">not uploaded</span>`;
+    const mstate = !q.media ? "" : mediaKeys === null ? "" : mediaKeys.has(mk) ? `<span class="good">uploaded</span>` : repoKeys.has(mk) ? `<span class="good">built in</span>` : `<span class="bad">not uploaded</span>`;
     preview = `<div class="preview"><div class="qt">${esc(q.question || "(no question text)")}</div>${opts}
       <div class="kv"><span><b>Type</b>${{ mc: "Multiple choice", text: "Typed", number: "Number" }[q.type] || q.type}</span>
       ${q.type !== "mc" ? `<span><b>Answer</b>${esc(q.answer)}${q.unit ? " " + esc(q.unit) : ""}</span>` : ""}
@@ -457,7 +460,7 @@ function renderSetup() {
   const counts = ROUNDS.map(R => `${R.n}. ${esc(R.name)}: <b>${qs(R.n).length}</b>`).join(" · ");
   const issues = packIssues();
   paint($("packcard"), `<h2>Question pack</h2>
-    <p style="margin:0 0 8px">Questions load automatically from the encrypted <code>trivia/questions.enc</code> in the eco-cup repo every time this page opens, and its pictures and music are copied into the game automatically. To change questions, edit the plain copy and re-encrypt it with <code>trivia/tools/crypt.mjs</code>, then press Reload.</p>
+    <p style="margin:0 0 8px">Questions load automatically from <code>trivia/questions.csv</code> in the eco-cup repo every time this page opens. <a href="${EDIT_URL}" target="_blank" rel="noopener">Edit it on GitHub</a>, commit, wait about a minute, then press Reload.</p>
     <div class="row" style="margin-bottom:10px"><button class="btn primary" id="reloadrepo">${PACK.source === "manual" ? "Use repo questions" : "Reload from repo"}</button></div>
     <details><summary class="muted">Format, and loading a different pack by hand</summary>
     <p class="muted" style="margin:8px 0">One row per question. Columns: <code>round, type, question, a, b, c, d, answer, alternatives, unit, min, max, step, timer, hint, media, level, exact</code>. Type is mc, text or number. Put yes in exact for a typed answer that must be spelled exactly. For mc the answer is A, B, C or D. Alternatives are separated by |. </p>
@@ -467,14 +470,14 @@ function renderSetup() {
     <p style="margin:10px 0 4px">${PACK.name ? `Loaded <b>${esc(PACK.name)}</b>${PACK.loadedAt ? ` (${new Date(PACK.loadedAt).toLocaleString()})` : ""}` : "<span class='warn'>No pack loaded yet</span>"}</p>
     <p class="muted" style="margin:0">${counts}</p>
     ${issues.length ? `<div class="warn" style="margin-top:8px">Check these:<ul style="margin:4px 0 0">${issues.slice(0, 15).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : PACK.name ? `<p class="good" style="margin-top:8px">Pack looks good.</p>` : ""}
-    <p class="muted" style="font-size:13px">Players' pages only get a question when you open it, and never the answer. The question and media files in the repo are encrypted with the operator password.</p>`);
+    <p class="muted" style="font-size:13px">Players' pages only get a question when you open it, and never the answer. The eco-cup repo is public, though, so someone who finds questions.csv on GitHub could read the answers.</p>`);
   const needed = [...new Set(ROUNDS.flatMap(R => qs(R.n).map(q => q.media).filter(Boolean)))];
   paint($("mediacard"), `<h2>Pictures and music</h2>
     <p class="muted" style="margin:0 0 8px">Upload the files named in the pack's media column. They're stored online so the question screen can run on any computer. Music clips must be under 30 seconds (the screen plays each twice).</p>
     <div class="row"><input type="file" id="mediafile" multiple accept="image/*,audio/*"><button class="btn" id="mediarefresh">Refresh list</button></div>
     <p id="mediaprog" class="muted" style="margin:6px 0"></p>
-    ${needed.length ? `<p style="margin:6px 0">Pack needs ${needed.length} file${needed.length > 1 ? "s" : ""}: ${needed.map(m => mediaKeys && mediaKeys.has(mediaKey(m)) ? `<span class="good">${esc(m)}</span>` : `<span class="bad">${esc(m)}</span>`).join(", ")}</p>` : ""}
-    <div class="medialist">${mediaKeys === null ? "<span class='muted'>Loading…</span>" : [...mediaKeys].sort().map(k => `<div><span>${esc(k)}</span><button class="btn" style="padding:2px 8px" data-delmedia="${esc(k)}">Delete</button></div>`).join("") || "<span class='muted'>Nothing uploaded yet</span>"}</div>`);
+    ${needed.length ? `<p style="margin:6px 0">Pack needs ${needed.length} file${needed.length > 1 ? "s" : ""}: ${needed.map(m => haveMedia(mediaKey(m)) ? `<span class="good">${esc(m)}</span>` : `<span class="bad">${esc(m)}</span>`).join(", ")}</p>` : ""}
+    <div class="medialist">${mediaKeys === null ? "<span class='muted'>Loading…</span>" : [...mediaKeys].sort().map(k => `<div><span>${esc(k)}</span><button class="btn" style="padding:2px 8px" data-delmedia="${esc(k)}">Delete</button></div>`).join("") + [...repoKeys].filter(k => !mediaKeys.has(k)).sort().map(k => `<div><span>${esc(k)}</span><span class="muted">built in</span></div>`).join("") || "<span class='muted'>Nothing uploaded yet</span>"}</div>`);
   paint($("teamscard"), `<h2>Teams</h2><p class="muted" style="margin:0 0 8px">Untick teams that aren't here tonight, so they're left out of rankings and the bottom 2.</p>
     <table class="grid"><thead><tr><th>Playing</th><th>Team</th><th>Display name</th></tr></thead><tbody>
     ${TEAMS.map(t => `<tr><td><input type="checkbox" data-playing="${t}" ${D.config?.teams?.[t]?.playing === false ? "" : "checked"}></td><td>${t}</td><td><input type="text" data-tname="${t}" placeholder="Team ${t}" value="${esc(D.config?.teams?.[t]?.name || "")}"></td></tr>`).join("")}</tbody></table>`);
@@ -498,7 +501,7 @@ function packIssues() {
     if (R.scoring === "closest" && q.type !== "number") out.push(`${where}: Closest Wins questions should be type number`);
     if (q.type !== "mc" && !String(q.answer ?? "").trim()) out.push(`${where}: no answer`);
     if (!R.timed && Number(q.timer) > 60) out.push(`${where}: timer over 60 s, it will be cut to 60`);
-    if (q.media && mediaKeys && !mediaKeys.has(mediaKey(q.media))) out.push(`${where}: media “${q.media}” not uploaded`);
+    if (q.media && mediaKeys && !haveMedia(mediaKey(q.media))) out.push(`${where}: media “${q.media}” not uploaded`);
   }));
   if (qs(4).length > 10) out.push("Wager round has more than 10 questions, but there are only 10 weights");
   return out;
@@ -550,6 +553,9 @@ async function listMedia() {
     const r = await fetch(`${DB_URL}${MEDIA}.json?shallow=true`, { cache: "no-store" });
     const j = await r.json(); mediaKeys = new Set(Object.keys(j || {}));
   } catch (e) { mediaKeys = mediaKeys || new Set(); }
+  // files built into the site count as available too (an upload with the same name wins)
+  const want = [...new Set(ROUNDS.flatMap(R => qs(R.n).map(q => q.media).filter(Boolean)).map(mediaKey))].filter(k => !mediaKeys.has(k) && !repoKeys.has(k));
+  await Promise.all(want.map(k => { const u = repoMediaUrl(k); return u ? fetch(u, { method: "HEAD", cache: "no-store" }).then(r => { if (r.ok) repoKeys.add(k); }).catch(() => {}) : null; }));
   render();
 }
 function readAsDataURL(file) { return new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); }); }
@@ -718,49 +724,17 @@ function copyCSV() {
   navigator.clipboard.writeText(lines.join("\n")).then(() => toast("Copied. Paste into a spreadsheet."), () => toast("Couldn't copy"));
 }
 
-// Questions come from trivia/questions.enc in this repo (encrypted with the operator password, see tools/crypt.mjs),
-// loaded every time the page opens. Media sits encrypted in trivia/media/ and is copied into the database automatically.
-const REPO_FILE = "questions.enc", EDIT_URL = "https://github.com/Shoeyoung25/eco-cup/tree/main/trivia";
-let PW = ""; try { PW = localStorage.getItem("trivia-pw") || ""; } catch (e) {}
-async function askPassword(msg) {
-  for (;;) {
-    const d = await ask("Operator password", `<p>${msg || "The questions are locked. Enter the operator password."}</p><input type="password" id="pwval" style="width:100%">`, "Unlock");
-    if (!d) return false;
-    const v = d.querySelector("#pwval").value.trim();
-    try { await fetchDecrypt(v, `${REPO_FILE}?t=${Date.now()}`); PW = v; try { localStorage.setItem("trivia-pw", v); } catch (e) {} return true; }
-    catch (e) { msg = "Wrong password, try again."; }
-  }
-}
-async function syncMedia() {
-  if (!PW) return;
-  await listMedia();
-  const want = [...new Set(ROUNDS.flatMap(R => qs(R.n).map(q => q.media).filter(Boolean)))].filter(m => !mediaKeys.has(mediaKey(m)));
-  let done = 0;
-  for (const m of want) {
-    const k = mediaKey(m), x = k.match(/_([a-z0-9]+)$/); if (!x) continue;
-    try {
-      const buf = await fetchDecrypt(PW, `media/${k.slice(0, -x[0].length)}.${x[1]}.enc?t=${Date.now()}`);
-      const type = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", mp3: "audio/mpeg", m4a: "audio/mp4", wav: "audio/wav", ogg: "audio/ogg" }[x[1]] || "application/octet-stream";
-      const data = await readAsDataURL(new Blob([buf], { type }));
-      const dur = type.startsWith("audio") ? await audioDuration(data) : null;
-      await put(`${MEDIA}/${k}`, { name: m, type, data, dur: Number.isFinite(dur) ? dur : null, at: SERVER_TS });
-      done++;
-    } catch (e) { /* not in the repo: upload it by hand in Setup */ }
-  }
-  if (done) { toast(`Added ${done} media file${done > 1 ? "s" : ""} from the repo`); listMedia(); }
-}
+// Questions come from trivia/questions.csv in this repo, loaded every time the page opens.
+const REPO_FILE = "questions.csv", EDIT_URL = "https://github.com/Shoeyoung25/eco-cup/edit/main/trivia/questions.csv";
 async function loadFromRepo(quiet) {
   try {
-    if (!PW && !(await askPassword())) { toast("Questions stay locked until you enter the password.", 5000); return; }
-    let buf;
-    try { buf = await fetchDecrypt(PW, `${REPO_FILE}?t=${Date.now()}`); }
-    catch (e) { if (/status/.test(e.message)) throw e; PW = ""; if (!(await askPassword("The password changed. Enter the new one."))) return; buf = await fetchDecrypt(PW, `${REPO_FILE}?t=${Date.now()}`); }
+    const r = await fetch(`${REPO_FILE}?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error("status " + r.status);
     const before = JSON.stringify(PACK.rounds);
-    loadPackText(new TextDecoder().decode(buf), "the eco-cup repo (encrypted)", "repo", true);
-    syncMedia();
+    loadPackText(await r.text(), "questions.csv in the eco-cup repo", "repo", true);
     const n = Object.values(PACK.rounds).reduce((a, x) => a + x.length, 0);
     if (!quiet || before !== JSON.stringify(PACK.rounds)) toast(`${n} questions loaded from the repo${before !== JSON.stringify(PACK.rounds) && before !== "{}" ? " (changed since last time)" : ""}`);
-  } catch (e) { toast("Couldn't load the questions from the repo: " + e.message, 5000); }
+  } catch (e) { toast("Couldn't load questions.csv from the repo: " + e.message, 5000); }
 }
 if (PACK.source !== "manual") loadFromRepo(true);
 else setTimeout(() => toast("Using questions you loaded by hand. Setup → Use repo questions to switch back.", 5000), 800);
