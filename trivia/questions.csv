@@ -1,0 +1,52 @@
+round,type,question,a,b,c,d,answer,alternatives,unit,min,max,step,timer,hint,media,level,exact
+1,text,What is the most abundant gas in Earth's atmosphere?,,,,,Nitrogen,N2,,,,,30,,,common
+1,mc,Which letter does not appear in any US state name?,J,X,Q,Z,C,,,,,,30,,,niche
+1,mc,What is the largest ocean on Earth?,Pacific,Atlantic,Indian,Arctic,A,,,,,,30,,,common
+1,text,What is the longest river in Europe?,,,,,Volga,Volga River,,,,,30,,,niche
+1,mc,What is the capital of Canada?,Toronto,Montreal,Ottawa,Vancouver,C,,,,,,30,,,common
+1,mc,Which country has more pyramids than Egypt?,Sudan,Mexico,Peru,China,A,,,,,,30,,,niche
+1,text,How many leads does our club have (not counting the president and chief engineer)?,,,,,12,twelve,,,,,30,,,niche
+1,mc,Which country has the most natural lakes?,Russia,Canada,USA,Finland,B,,,,,,30,,,niche
+1,mc,Which blood type is the universal donor?,AB+,A-,B+,O-,D,,,,,,30,,,common
+1,mc,Which planet has the shortest day?,Jupiter,Mercury,Earth,Mars,A,,,,,,30,,,niche
+2,text,Which car brand's logo is this?,,,,,Subaru,,,,,,60,,r2-q1-logo.png,common
+2,mc,Which country's flag is this?,Nepal,Bhutan,Tibet,Myanmar,B,,,,,,60,,r2-q2-flag.png,niche
+2,text,Name this landmark.,,,,,Christ the Redeemer,Cristo Redentor|Christ Redeemer|Rio,,,,,60,,r2-q3-landmark.jpg,common
+2,text,Where on campus is this?,,,,,Alma Mater,Alma Mater statue,,,,,60,,r2-q4-campus.jpg,niche
+2,text,What component is this circuit symbol?,,,,,Diode,,,,,,60,,r2-q5-symbol.png,common
+2,mc,What is this car part?,Alternator,CV joint,Turbocharger,Starter motor,C,,,,,,60,,r2-q6-part.jpg,niche
+2,mc,What type of bridge is this?,Cantilever,Arch,Suspension,Cable-stayed,D,,,,,,60,,r2-q7-bridge.jpg,common
+2,text,Which country is this landmark in?,,,,,Jordan,,,,,,60,,r2-q8-landmark.jpg,niche
+2,text,Name this scientist.,,,,,Marie Curie,Curie|Marie Sklodowska Curie,,,,,60,,r2-q9-face.jpg,common
+2,text,Which US state is this? (shown upside down),,,,,Tennessee,,,,,,60,,r2-q10-outline.png,niche
+3,text,Name the band.,,,,,a-ha,aha,,,,,60,,,common
+3,mc,Which decade is this song from?,1960s,1970s,1980s,1990s,B,,,,,,60,,,common
+3,text,Name this song.,,,,,Mr. Blue Sky,Mister Blue Sky|Mr Blue Sky,,,,,60,,,common
+3,mc,How many members were in this band's classic Rumours line-up?,3,4,5,6,C,,,,,,60,,,niche
+3,mc,Who composed this piece?,Vivaldi,Bach,Mozart,Beethoven,A,,,,,,60,,r3-q5.mp3,common
+3,text,Which film was this song written for?,,,,,8 Mile,Eight Mile,,,,,60,,,niche
+3,mc,Where does this tune come from?,A Russian folk song,Written for the game,A Tchaikovsky ballet,The Soviet anthem,A,,,,,,60,,r3-q7.mp3,niche
+4,text,Which country has won the most FIFA men's World Cups?,,,,,Brazil,,,,,,60,Sports,,common
+4,text,What alias does Walter White use in Breaking Bad?,,,,,Heisenberg,,,,,,60,Film & TV,,common
+4,text,What is the effect that makes a spinning ball curve through the air?,,,,,Magnus effect,Magnus,,,,,60,Physics,,niche
+4,mc,Which country did the croissant originally come from?,France,Austria,Belgium,Italy,B,,,,,,60,Food,,niche
+4,text,In what year did the Berlin Wall fall?,,,,,1989,,,,,,60,History,,common
+4,text,What is the smallest US state by area?,,,,,Rhode Island,,,,,,60,Geography,,common
+4,text,What was the world's first mass-produced hybrid car?,,,,,Toyota Prius,Prius,,,,,60,Cars,,niche
+5,number,How tall is the Eiffel Tower?,,,,,330,,m,0,1000,1,60,,,common
+5,number,How many countries are members of the United Nations?,,,,,193,,,0,300,1,60,,,common
+5,number,What is the average distance from Earth to the Moon?,,,,,384400,,km,0,1000000,100,60,,,niche
+5,number,How many bones are in the adult human body?,,,,,206,,,0,500,1,60,,,common
+5,number,The PAC-Car II set a fuel-economy world record in 2005. How many km per litre did it get?,,,,,5385,,km/L,0,10000,1,60,,,niche
+5,number,What is the driving distance from Champaign to Chicago?,,,,,135,,miles,0,500,1,60,,,common
+5,number,What is the nominal voltage of the battery pack in the car our club is building right now?,,,,,51.8,,V,0,200,0.1,60,,,niche
+6,mc,Which company makes the Model Y?,Ford,Rivian,Tesla,Lucid,C,,,,,,30,,,common
+6,mc,What does a kilowatt-hour (kWh) measure?,Energy,Power,Voltage,Current,A,,,,,,30,,,common
+6,mc,In an electric car what does the inverter do?,Steps the battery down to 12 V,Turns battery DC into AC for the motor,Turns charger AC into DC for the battery,Reverses the motor for reverse gear,B,,,,,,30,,,niche
+6,mc,Which film made the line I'll be back famous?,Die Hard,RoboCop,Predator,The Terminator,D,,,,,,30,,,common
+6,mc,Which Top Gear presenter crashed a jet-powered dragster at about 288 mph in 2006?,Richard Hammond,James May,Jeremy Clarkson,The Stig,A,,,,,,30,,,niche
+6,mc,Which source makes the most renewable electricity worldwide?,Solar,Wind,Hydropower,Geothermal,C,,,,,,30,,,niche
+6,text,Type Prats's full name: first + middle + last. Spelling counts!,,,,,Pratyush Ashok Anand,,,,,,30,,,common,yes
+6,mc,What is the lightest metal?,Aluminium,Magnesium,Titanium,Lithium,D,,,,,,30,,,niche
+6,mc,Which artist's tour is the highest-grossing tour of all time?,Beyoncé,Coldplay,Taylor Swift,Ed Sheeran,C,,,,,,30,,,common
+6,mc,In what year was the first Shell Eco-marathon held?,1965,1985,2000,2010,B,,,,,,30,,,niche
